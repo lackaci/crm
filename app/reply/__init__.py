@@ -1,1 +1,5 @@
-"""Reply pipeline package. Reply logic will be added in a later milestone."""
+"""Safe, FAQ-only reply generation."""
+
+from .pipeline import DraftResult, process_email
+
+__all__ = ["DraftResult", "process_email"]

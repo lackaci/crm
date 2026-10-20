@@ -32,5 +32,7 @@ The database stores customer information, incoming emails, approved FAQ answers,
 reply drafts, customer files, and an audit trail. `LLMProvider` and
 `EmailProvider` describe what an external service can do without tying the rest
 of the app to a vendor. The first milestone includes a deterministic fake LLM
-and a JSON-backed email provider, so development can happen offline. Later
-milestones will add the database helpers, reply safety rules, and screens.
+and a JSON-backed email provider, so development can happen offline. The
+customer screen uses functions in `app/db/customers.py`; SQL stays in that
+database layer rather than in the PySide6 widgets. Later milestones will add
+reply safety rules and more screens.
