@@ -1,0 +1,12 @@
+[
+  {"id": 1, "from_name": "Anna Kovacs", "from_email": "anna@example.com", "subject": "Opening hours?",
+   "body": "Hi, until what time are you open on Fridays?"},
+  {"id": 2, "from_name": "Peter Szabo", "from_email": "peter@example.com", "subject": "Can't find my invoice",
+   "body": "Hello, I lost the invoice for my last order. Can you help?"},
+  {"id": 3, "from_name": "Maria Nagy", "from_email": "maria@example.com", "subject": "Refund!!",
+   "body": "This is unacceptable, I want my money back immediately or I will sue."},
+  {"id": 4, "from_name": "Tom Varga", "from_email": "tom@example.com", "subject": "Custom order",
+   "body": "Do you make wooden tables in custom sizes, and what would 2m x 1m cost?"},
+  {"id": 5, "from_name": "Eva Toth", "from_email": "eva@example.com", "subject": "Delivery time",
+   "body": "How many days until my order arrives?"}
+]
