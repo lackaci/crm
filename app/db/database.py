@@ -9,6 +9,14 @@ def initialize_database(database_path: Path) -> None:
     schema_path = Path(__file__).with_name("schema.sql")
     with sqlite3.connect(database_path) as connection:
         connection.executescript(schema_path.read_text(encoding="utf-8"))
+        columns = {
+            row[1]
+            for row in connection.execute("PRAGMA table_info(emails)").fetchall()
+        }
+        if "status" not in columns:
+            connection.execute(
+                "ALTER TABLE emails ADD COLUMN status TEXT NOT NULL DEFAULT 'new'"
+            )
 
 
 def open_database(database_path: Path) -> sqlite3.Connection:

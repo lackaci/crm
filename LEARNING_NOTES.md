@@ -166,3 +166,58 @@ only path that could mark a reply as sent. A real product would also need
 stronger multilingual safety checks, provider failure reporting, and security
 testing around the cloud connector. The optional cloud connector currently uses
 a placeholder authorization header, so it is not ready for real service use.
+
+## Milestone 5: reviewing replies before sending
+
+### What we built
+
+We built a review queue for reply drafts. It shows drafts that are waiting for
+the owner. The owner can edit a draft, reject it, or approve it. Only Approve
+calls the email provider; the current provider prints a safe mock message
+instead of sending a real email.
+
+### How it works
+
+```text
+pending draft
+     |
+     v
+owner reviews it
+  |       |        |
+ Edit   Reject   Approve
+  |       |        |
+save    rejected  mock provider
+local   + audit   approved + audit
+draft
+```
+
+1. The queue asks the database for drafts with `pending` status.
+2. Selecting a draft shows the incoming email and proposed reply.
+3. Edit changes only the saved draft text and records an audit entry.
+4. Reject changes the status to `rejected` and never calls the provider.
+5. Approve calls the injected provider first. A successful call changes the
+   status to `approved`; a failed call is shown, recorded, and leaves it
+   pending.
+
+### Key words
+
+- **Approval queue:** A waiting line of drafts for a person to review.
+- **Provider:** A replaceable adapter for an outside service, such as email.
+- **Audit log:** A history of important actions and who performed them.
+- **Injected provider:** A provider handed to the code, making safe tests easy.
+- **Pending:** Waiting for an owner decision; it has not been sent.
+
+### Try it yourself
+
+1. Run `pytest -q` and see the approval and safety tests pass offline.
+2. Start the app with `python -m app.main`, open **Approval Queue**, and
+   select a pending draft if the database has one.
+3. Edit or reject a draft and inspect the `audit_log` table; approve a draft
+   to see the mock email printed in the terminal.
+
+### What comes next
+
+This prototype still uses a mock provider, so approving a draft does not send
+real mail. A real product would need a real provider, owner identity and
+permissions, stronger retry rules, and protection against duplicate sends.
+It would also need clearer success messages and more end-to-end UI tests.

@@ -1,5 +1,6 @@
 """Focused safety tests for the Milestone 4 reply pipeline."""
 
+import json
 from pathlib import Path
 
 import pytest
@@ -7,7 +8,8 @@ import pytest
 from app.db.database import initialize_database, open_database
 from app.db.drafts import list_drafts
 from app.db.emails import EmailRecord
-from app.db.faqs import create_faq
+from app.db.faqs import FAQEntry, create_faq
+from app.reply.matcher import DEFAULT_THRESHOLD, find_best_faq
 from app.reply.pipeline import process_email
 from app.providers.llm_fake import FakeLLMProvider
 
@@ -25,6 +27,32 @@ def _database(path: Path, approved: bool = True) -> Path:
             "VALUES (1, 'Ada', 'a@example.com', 'Opening hours', 'When are you open?')"
         )
     return path
+
+
+def test_sample_wording_is_calibrated_without_matching_unrelated_text() -> None:
+    """The real fixture wording should use the normal threshold."""
+    root = Path(__file__).parents[1]
+    email_data = json.loads((root / "sample_data" / "emails.json").read_text())
+    faq_data = json.loads((root / "sample_data" / "faqs.json").read_text())
+    faqs = [
+        FAQEntry(item["id"], item["question"], item["answer"], True, "")
+        for item in faq_data
+    ]
+    provider = FakeLLMProvider()
+
+    for email_id, expected_faq_id in ((1, 1), (2, 2), (5, 3)):
+        item = next(item for item in email_data if item["id"] == email_id)
+        result = find_best_faq(
+            _email(item["subject"], item["body"]), faqs, provider
+        )
+        assert result.faq is not None
+        assert result.faq.id == expected_faq_id
+        assert result.score > DEFAULT_THRESHOLD
+
+    unrelated = find_best_faq(
+        _email("Unrelated", "Can you change my account?"), faqs, provider
+    )
+    assert unrelated.score < DEFAULT_THRESHOLD
 
 
 def test_safe_match_creates_pending_draft_from_approved_faq(tmp_path: Path) -> None:

@@ -7,7 +7,7 @@ Status legend: [ ] todo, [~] in progress, [x] done
 - [x] 2. Customers: add / edit / list in SQLite + UI table
 - [x] 3. Mock inbox: load sample_data/emails.json, show emails per customer
 - [x] 4. FAQ + reply pipeline: match -> draft -> guardrails (+ tests, FakeLLM)
-- [ ] 5. Approval queue UI: Approve / Edit / Reject, audit log (approve = mark "sent")
+- [x] 5. Approval queue UI: Approve / Edit / Reject, audit log (approve = mark "sent")
 - [ ] 6. Files: add a file, classify (invoice/contract/other), store under customer folder
 - [ ] 7. Teacher pass: full walkthrough in LEARNING_NOTES.md
 
@@ -46,3 +46,12 @@ and the application shows a selected customer's messages without SQL in the UI.
 
 Milestone 4 is done when only approved FAQ answers can become drafts, unsafe or unclear
 messages are escalated, the FakeLLM works offline, and the behavior is covered by tests.
+
+## Milestone 5 breakdown
+1. **BackendDev** adds approval actions and a safe mock send operation with audit logging.
+2. **UIDev** adds an approval queue showing pending drafts with Edit, Approve, and Reject actions.
+3. **QATeacher** runs the complete suite, verifies that approval is required before mock sending, and appends beginner-friendly notes to `LEARNING_NOTES.md`.
+
+Milestone 5 is done when pending drafts can be reviewed, edited, approved, or rejected,
+approval is the only action that marks a draft as sent through the mock provider, and every
+queue action is recorded in the audit log.

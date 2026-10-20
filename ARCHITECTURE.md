@@ -36,3 +36,8 @@ and a JSON-backed email provider, so development can happen offline. The
 customer screen uses functions in `app/db/customers.py`; SQL stays in that
 database layer rather than in the PySide6 widgets. Later milestones will add
 reply safety rules and more screens.
+
+Email providers raise `EmailDeliveryError` for expected delivery failures.
+Approval handling audits and re-raises that specific failure while leaving the
+draft pending; unexpected programming errors are not treated as delivery
+failures.

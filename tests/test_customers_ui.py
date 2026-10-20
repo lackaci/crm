@@ -7,7 +7,7 @@ from PySide6.QtWidgets import QApplication
 
 from app.db.customers import list_customers
 from app.db.customers import add_customer
-from app.db.database import initialize_database
+from app.db.database import initialize_database, open_database
 from app.providers.email_mock import MockEmailProvider
 from app.ui.customers import CustomersWidget
 
@@ -64,3 +64,34 @@ def test_widget_imports_and_displays_selected_customer_email(qapp, tmp_path: Pat
     assert widget.email_table.item(0, 0).text() == "A question"
     assert "anna@example.com" in widget.email_table.item(0, 1).text()
     assert widget.email_table.item(0, 2).text() == "Could you call me back?"
+
+
+def test_widget_creates_pending_draft_for_selected_email(qapp, tmp_path: Path):
+    database_path = tmp_path / "draft-ui-test.db"
+    initialize_database(database_path)
+    add_customer(database_path, "Anna Kovacs", "anna@example.com")
+
+    class FixedProvider(MockEmailProvider):
+        def fetch_new_emails(self) -> list[dict[str, object]]:
+            return [
+                {
+                    "id": "fixture-1",
+                    "from_name": "Anna Kovacs",
+                    "from_email": "anna@example.com",
+                    "subject": "Opening hours?",
+                    "body": "What are your opening hours?",
+                }
+            ]
+
+    widget = CustomersWidget(database_path, email_provider=FixedProvider())
+    widget.table.cellClicked.emit(0, 0)
+    widget.inbox_widget.import_sample_emails()
+    widget.inbox_widget.load_sample_faqs()
+    widget.email_table.selectRow(0)
+    widget.create_draft_button.click()
+
+    with open_database(database_path) as connection:
+        draft = connection.execute(
+            "SELECT status FROM draft_replies"
+        ).fetchone()
+    assert draft["status"] == "pending"

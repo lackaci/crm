@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS emails (
     subject TEXT NOT NULL,
     body TEXT NOT NULL,
     received_at TEXT,
+    status TEXT NOT NULL DEFAULT 'new'
+        CHECK (status IN ('new', 'seen', 'done')),
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

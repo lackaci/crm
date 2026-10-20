@@ -4,6 +4,10 @@ from abc import ABC, abstractmethod
 from typing import Any
 
 
+class EmailDeliveryError(Exception):
+    """Expected failure while delivering an email through a provider."""
+
+
 class EmailProvider(ABC):
     """Common interface for mock and real email services."""
 
@@ -13,4 +17,4 @@ class EmailProvider(ABC):
 
     @abstractmethod
     def send_email(self, to: str, subject: str, body: str) -> None:
-        """Send an email through the configured provider."""
+        """Send an email, raising :class:`EmailDeliveryError` on delivery failure."""

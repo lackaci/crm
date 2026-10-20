@@ -18,20 +18,23 @@ from PySide6.QtWidgets import (
 )
 
 from app.db.customers import Customer, add_customer, list_customers, update_customer
+from app.db.emails import customer_email_status
 from app.providers.email_base import EmailProvider
+from app.providers.llm_base import LLMProvider
 from app.ui.inbox import CustomerInboxWidget
 
 
 class CustomersWidget(QWidget):
     """Let the owner add, edit, and browse customers."""
 
-    headers = ("Name", "Email", "Phone", "Notes")
+    headers = ("Name", "Email", "Phone", "Notes", "Status")
 
     def __init__(
         self,
         database_path: Path,
         parent: QWidget | None = None,
         email_provider: EmailProvider | None = None,
+        llm_provider: LLMProvider | None = None,
     ) -> None:
         super().__init__(parent)
         self.database_path = database_path
@@ -65,12 +68,17 @@ class CustomersWidget(QWidget):
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
         self.table.cellClicked.connect(self.select_customer)
         self.inbox_widget = CustomerInboxWidget(
-            database_path, provider=email_provider, parent=self
+            database_path,
+            provider=email_provider,
+            llm_provider=llm_provider,
+            parent=self,
         )
+        self.inbox_widget.status_changed.connect(self.refresh)
         # Convenient aliases keep the connected inbox easy to discover for
         # callers without changing the customer form's existing attributes.
         self.import_emails_button = self.inbox_widget.import_button
         self.email_table = self.inbox_widget.email_table
+        self.create_draft_button = self.inbox_widget.create_draft_button
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
@@ -88,6 +96,11 @@ class CustomersWidget(QWidget):
             self.table.setItem(row_index, 1, QTableWidgetItem(customer.email))
             self.table.setItem(row_index, 2, QTableWidgetItem(customer.phone))
             self.table.setItem(row_index, 3, QTableWidgetItem(customer.notes))
+            self.table.setItem(
+                row_index,
+                4,
+                QTableWidgetItem(customer_email_status(self.database_path, customer.id)),
+            )
             self.table.item(row_index, 0).setData(Qt.ItemDataRole.UserRole, customer.id)
         self.table.resizeColumnsToContents()
 

@@ -21,6 +21,7 @@ class EmailRecord:
     subject: str
     body: str
     received_at: str | None
+    status: str = "new"
 
 
 def log_action(database_path: Path, actor: str, action: str, details: str) -> None:
@@ -119,7 +120,7 @@ def list_emails_for_customer(
         rows = connection.execute(
             """
             SELECT id, customer_id, external_id, from_name, from_email,
-                   subject, body, received_at
+                   subject, body, received_at, status
             FROM emails
             WHERE customer_id = ?
             ORDER BY received_at, id
@@ -140,6 +141,71 @@ def list_emails_for_customer(
             received_at=str(row["received_at"])
             if row["received_at"] is not None
             else None,
+            status=str(row["status"]),
         )
         for row in rows
     ]
+
+
+def get_email(database_path: Path, email_id: int) -> EmailRecord | None:
+    """Return one stored email by ID for screens that show a related draft."""
+    with open_database(database_path) as connection:
+        row = connection.execute(
+            """
+            SELECT id, customer_id, external_id, from_name, from_email,
+                   subject, body, received_at, status
+            FROM emails
+            WHERE id = ?
+            """,
+            (email_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    return EmailRecord(
+        id=int(row["id"]),
+        customer_id=int(row["customer_id"]) if row["customer_id"] is not None else None,
+        external_id=str(row["external_id"]) if row["external_id"] is not None else None,
+        from_name=str(row["from_name"]),
+        from_email=str(row["from_email"]),
+        subject=str(row["subject"]),
+        body=str(row["body"]),
+        received_at=str(row["received_at"]) if row["received_at"] is not None else None,
+        status=str(row["status"]),
+    )
+
+
+def set_email_status(database_path: Path, email_id: int, status: str) -> None:
+    """Set the small workflow status shown in the inbox."""
+    if status not in {"new", "seen", "done"}:
+        raise ValueError("Email status must be new, seen, or done.")
+    with open_database(database_path) as connection:
+        cursor = connection.execute(
+            "UPDATE emails SET status = ? WHERE id = ?", (status, email_id)
+        )
+        if cursor.rowcount != 1:
+            raise ValueError("Email was not found.")
+
+
+def mark_email_seen(database_path: Path, email_id: int) -> None:
+    """Mark a new email as seen without changing completed emails."""
+    with open_database(database_path) as connection:
+        connection.execute(
+            "UPDATE emails SET status = 'seen' WHERE id = ? AND status = 'new'",
+            (email_id,),
+        )
+
+
+def customer_email_status(database_path: Path, customer_id: int) -> str:
+    """Return the aggregate status displayed beside a customer."""
+    with open_database(database_path) as connection:
+        rows = connection.execute(
+            "SELECT status FROM emails WHERE customer_id = ?", (customer_id,)
+        ).fetchall()
+    statuses = {str(row["status"]) for row in rows}
+    if not statuses:
+        return "No emails"
+    if "new" in statuses:
+        return "New"
+    if statuses == {"done"}:
+        return "Done"
+    return "Seen"

@@ -3,21 +3,18 @@
 import sys
 from pathlib import Path
 
-from PySide6.QtWidgets import QApplication, QMainWindow
+from PySide6.QtWidgets import QApplication
 
 from app.db.database import initialize_database
-from app.ui.customers import CustomersWidget
+from app.ui.main_window import MainWindow
 
 
 def main() -> int:
     """Open the Mini CRM customer window."""
     application = QApplication(sys.argv)
-    window = QMainWindow()
-    window.setWindowTitle("Mini CRM")
-    window.resize(800, 500)
     database_path = Path(__file__).resolve().parents[1] / "mini_crm.db"
     initialize_database(database_path)
-    window.setCentralWidget(CustomersWidget(database_path))
+    window = MainWindow(database_path)
     window.show()
     return application.exec()
 
