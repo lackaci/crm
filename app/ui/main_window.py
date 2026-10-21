@@ -19,6 +19,7 @@ class MainWindow(QMainWindow):
         email_provider: EmailProvider | None = None,
         llm_provider: LLMProvider | None = None,
         parent=None,
+        storage_root: Path | None = None,
     ) -> None:
         super().__init__(parent)
         self.database_path = database_path
@@ -26,6 +27,7 @@ class MainWindow(QMainWindow):
             database_path,
             email_provider=email_provider,
             llm_provider=llm_provider,
+            storage_root=storage_root,
         )
         self.approval_widget = ApprovalQueueWidget(
             database_path, provider=email_provider

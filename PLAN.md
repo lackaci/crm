@@ -8,8 +8,8 @@ Status legend: [ ] todo, [~] in progress, [x] done
 - [x] 3. Mock inbox: load sample_data/emails.json, show emails per customer
 - [x] 4. FAQ + reply pipeline: match -> draft -> guardrails (+ tests, FakeLLM)
 - [x] 5. Approval queue UI: Approve / Edit / Reject, audit log (approve = mark "sent")
-- [ ] 6. Files: add a file, classify (invoice/contract/other), store under customer folder
-- [ ] 7. Teacher pass: full walkthrough in LEARNING_NOTES.md
+- [x] 6. Files: add a file, classify (invoice/contract/other), store under customer folder
+- [x] 7. Teacher pass: full walkthrough in LEARNING_NOTES.md
 
 ## Later (not now)
 Real Gmail, local model (Ollama), auto-send per category, tasks/pipeline, installer.
@@ -55,3 +55,19 @@ messages are escalated, the FakeLLM works offline, and the behavior is covered b
 Milestone 5 is done when pending drafts can be reviewed, edited, approved, or rejected,
 approval is the only action that marks a draft as sent through the mock provider, and every
 queue action is recorded in the audit log.
+
+## Milestone 6 breakdown
+1. **BackendDev** adds safe file storage, classification, and database helpers for customer files.
+2. **UIDev** adds a customer file panel for choosing, classifying, and storing files without SQL in the UI.
+3. **QATeacher** runs the complete suite, verifies customer-folder storage and classification, and appends beginner-friendly notes to `LEARNING_NOTES.md`.
+
+Milestone 6 is done when an owner can select a customer, add a file, classify it as
+invoice, contract, or other, and find it stored under that customer's folder.
+
+## Milestone 7 breakdown
+1. **QATeacher** runs the complete test suite and application smoke check.
+2. **QATeacher** verifies the end-to-end beginner walkthrough: customer, inbox, statuses, safe drafts, approval, and files.
+3. **QATeacher** reviews architecture and safety rules, then appends the final walkthrough and open limitations to `LEARNING_NOTES.md`.
+
+Milestone 7 is done when the full offline prototype is verified, the walkthrough is
+documented, and the owner has clear commands for running and testing the application.

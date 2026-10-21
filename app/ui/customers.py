@@ -22,6 +22,7 @@ from app.db.emails import customer_email_status
 from app.providers.email_base import EmailProvider
 from app.providers.llm_base import LLMProvider
 from app.ui.inbox import CustomerInboxWidget
+from app.ui.customer_files import CustomerFilesWidget
 
 
 class CustomersWidget(QWidget):
@@ -35,6 +36,7 @@ class CustomersWidget(QWidget):
         parent: QWidget | None = None,
         email_provider: EmailProvider | None = None,
         llm_provider: LLMProvider | None = None,
+        storage_root: Path | None = None,
     ) -> None:
         super().__init__(parent)
         self.database_path = database_path
@@ -79,12 +81,19 @@ class CustomersWidget(QWidget):
         self.import_emails_button = self.inbox_widget.import_button
         self.email_table = self.inbox_widget.email_table
         self.create_draft_button = self.inbox_widget.create_draft_button
+        self.files_widget = CustomerFilesWidget(
+            database_path, storage_root=storage_root, parent=self
+        )
+        # This alias keeps the panel easy to find without changing the
+        # existing inbox/customer public attributes.
+        self.customer_files_widget = self.files_widget
 
         layout = QVBoxLayout(self)
         layout.addLayout(form)
         layout.addLayout(buttons)
         layout.addWidget(self.table)
         layout.addWidget(self.inbox_widget)
+        layout.addWidget(self.files_widget)
         self.refresh()
 
     def refresh(self) -> None:
@@ -109,6 +118,7 @@ class CustomersWidget(QWidget):
         customer_id = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
         self.selected_customer_id = int(customer_id)
         self.inbox_widget.set_customer(self.selected_customer_id)
+        self.files_widget.set_customer(self.selected_customer_id)
         customer = next(
             customer
             for customer in list_customers(self.database_path)
@@ -140,6 +150,7 @@ class CustomersWidget(QWidget):
         """Reset the form so the next save creates a customer."""
         self.selected_customer_id = None
         self.inbox_widget.set_customer(None)
+        self.files_widget.set_customer(None)
         self.name_input.clear()
         self.email_input.clear()
         self.phone_input.clear()

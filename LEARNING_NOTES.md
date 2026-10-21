@@ -221,3 +221,143 @@ This prototype still uses a mock provider, so approving a draft does not send
 real mail. A real product would need a real provider, owner identity and
 permissions, stronger retry rules, and protection against duplicate sends.
 It would also need clearer success messages and more end-to-end UI tests.
+
+## Milestone 6: storing customer files safely
+
+### What we built
+
+We added a small file area to the customer screen. An owner can choose a local
+file and label it as an invoice, contract, or other file. The app copies the
+file into a folder named for that customer, such as `customer_1`. It also
+records the file and the action in the database, so the screen can show what
+was stored.
+
+### How it works
+
+```text
+owner selects customer
+        |
+        v
+choose a local file + choose a type
+        |
+        v
+check the file and customer
+        |
+        v
+copy to customer_<id>/filename
+        |
+        v
+save a database row + audit entry
+```
+
+1. The customer row is selected.
+2. The owner chooses a file and one of the three allowed types.
+3. The storage code checks that the source exists and is a real file.
+4. The file is copied without replacing an existing file with the same name.
+5. The database stores the file details and an audit entry.
+6. The customer panel reloads and displays the stored file.
+
+### Key words
+
+- **Classification:** The label describing a file: invoice, contract, or other.
+- **Customer folder:** A folder named `customer_<id>` that keeps files separated.
+- **Duplicate:** A second file with the same name for one customer.
+- **Audit entry:** A short history record saying what action happened.
+- **Migration:** A safe database update that adds missing tables without deleting data.
+
+### Try it yourself
+
+1. Run `pytest -q` and see the file, customer, inbox, and approval tests pass.
+2. Start the app with `python -m app.main`, select a customer, and use
+   **Choose file**, then select a classification and click **Store file**.
+3. Store the same filename twice and notice the warning; the first copy is
+   kept and is not silently replaced.
+
+### What comes next
+
+This prototype copies files on the local computer and trusts the local
+filesystem. A real product would need file-size limits, stronger permissions,
+virus scanning, safe handling of unusual filenames, and a way to open or
+download files. It would also need clearer success feedback and more complete
+end-to-end UI testing.
+
+## Milestone 7: final teacher check
+
+### What we built
+
+The complete offline learning prototype was checked from start to finish. It
+can keep customers, import sample emails, use approved FAQ answers, and wait
+for an owner to review a reply. It can also reject or approve a draft and store
+a labeled customer file in a `customer_<id>` folder. Unsafe messages stop and
+go to the owner instead of becoming drafts.
+
+### Setup and run
+
+From the project folder, run:
+
+```text
+python -m venv .venv
+.venv\Scripts\activate
+pip install -r requirements.txt
+python -m app.main
+```
+
+Run the tests with:
+
+```text
+pytest -q
+```
+
+The final check reported **45 passed in 3.18 seconds**. An offscreen startup
+check ran `python -m app.main`; the process stayed alive for five seconds,
+which confirms that the Qt event loop started without a startup error.
+
+### Beginner walkthrough
+
+1. Add and select a customer such as Anna Kovacs.
+2. Import the five messages in `sample_data/emails.json`.
+3. Select a message and watch its status move from **New** to **Seen** to
+   **Done**.
+4. Use the sample FAQ loader. It stores four approved FAQ answers.
+5. Select the safe invoice message from Peter Szabo and create a draft. The
+   result is **pending**, not sent.
+6. Edit that draft, reject it, and confirm it leaves the pending queue.
+7. Create the safe draft again and approve it. The recording mock provider
+   received exactly one send call, and approval changed the draft to
+   **approved**.
+8. Store a sample invoice as **invoice**. The database record points inside
+   `customer_<id>`, and the audit log records the action.
+9. The refund/legal-threat sample escalated with no draft. It was never sent.
+   Audit rows were created for the important import, FAQ, draft, review, and
+   file actions.
+
+### Key safety rules checked
+
+- The fake model only rewrites an approved FAQ answer. It does not answer from
+  its own knowledge.
+- A weak FAQ match, a refund, a legal threat, anger, money details, or unclear
+  text escalates instead of creating a draft.
+- A draft stays pending until the owner clicks **Approve**.
+- Approve is the only mock-send path. Edit and Reject do not call the email
+  provider.
+- SQL is kept in `app/db/`, and the user interface calls database functions.
+  Providers are behind `LLMProvider` and `EmailProvider` interfaces.
+- No broad `except Exception` or bare `except` was found in the application
+  code reviewed. No secrets were added to the project.
+
+### Prototype limitations and open problems
+
+This is still a small offline teaching prototype. The email provider prints
+instead of sending real mail, and the cloud model adapter is not wired into
+the screen. The safety checks are simple rules and should not be trusted for
+real customer communication. A real product would need user accounts and
+permissions, stronger security and multilingual safety testing, duplicate-send
+protection, file-size and malware checks, backups, and fuller UI end-to-end
+tests. The database and local customer folders also need a proper migration and
+backup plan before real use.
+
+### What comes next
+
+The owner can now run the app, try the walkthrough, and commit this final
+milestone. The planned future work is a real Gmail provider, a local model
+such as Ollama, and more CRM features such as tasks and a sales pipeline.
