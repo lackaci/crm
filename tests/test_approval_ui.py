@@ -78,23 +78,34 @@ def test_empty_queue_shows_status_and_disables_actions(qapp, tmp_path: Path):
     assert not widget.approve_button.isEnabled()
 
 
-def test_selecting_pending_draft_enables_actions(qapp, draft_database):
+def test_default_widget_disables_approve_and_explains_why(qapp, draft_database):
     path, _draft_id = draft_database
 
     widget = ApprovalQueueWidget(path)
 
+    assert not widget.approve_button.isEnabled()
+    assert "sending is disabled" in widget.approve_button.toolTip().lower()
+
+
+def test_selecting_pending_draft_enables_actions(qapp, draft_database):
+    path, _draft_id = draft_database
+
+    widget = ApprovalQueueWidget(path, sending_enabled=True)
+
     assert widget.edit_button.isEnabled()
     assert widget.reject_button.isEnabled()
-    assert widget.approve_button.isEnabled()
+    assert not widget.approve_button.isEnabled()
     assert widget.empty_state_label.isHidden()
 
 
-def test_reject_does_not_send_and_approve_sends_and_removes(
+def test_reject_does_not_send_and_approve_stays_blocked(
     qapp, draft_database
 ):
     path, draft_id = draft_database
     provider = RecordingProvider()
-    widget = ApprovalQueueWidget(path, provider=provider)
+    widget = ApprovalQueueWidget(
+        path, provider=provider, sending_enabled=True
+    )
 
     widget.reject()
     assert list_pending_drafts(path) == []
@@ -107,26 +118,21 @@ def test_reject_does_not_send_and_approve_sends_and_removes(
     widget.refresh()
     widget.approve()
 
-    assert provider.calls == [
-        ("ada@example.com", "Re: Question", "Another answer")
-    ]
-    assert list_pending_drafts(path) == []
+    assert provider.calls == []
+    assert list_pending_drafts(path)[0].status == "pending"
 
 
-def test_provider_failure_is_shown_and_draft_stays_pending(
+def test_approval_button_has_no_enabled_provider_path(
     qapp, draft_database, monkeypatch
 ):
     path, _draft_id = draft_database
     provider = RecordingProvider(fail=True)
-    messages = []
-    monkeypatch.setattr(
-        QMessageBox,
-        "warning",
-        lambda _parent, title, message: messages.append((title, message)),
+    widget = ApprovalQueueWidget(
+        path, provider=provider, sending_enabled=True
     )
-    widget = ApprovalQueueWidget(path, provider=provider)
 
+    assert not widget.approve_button.isEnabled()
     widget.approve()
 
-    assert messages == [("Could not approve draft", "send failed")]
+    assert provider.calls == []
     assert len(list_pending_drafts(path)) == 1

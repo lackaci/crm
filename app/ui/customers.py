@@ -12,6 +12,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QTextEdit,
     QVBoxLayout,
     QWidget,
@@ -37,6 +38,7 @@ class CustomersWidget(QWidget):
         email_provider: EmailProvider | None = None,
         llm_provider: LLMProvider | None = None,
         storage_root: Path | None = None,
+        gmail_allowed_senders: tuple[str, ...] = (),
     ) -> None:
         super().__init__(parent)
         self.database_path = database_path
@@ -46,7 +48,7 @@ class CustomersWidget(QWidget):
         self.email_input = QLineEdit()
         self.phone_input = QLineEdit()
         self.notes_input = QTextEdit()
-        self.notes_input.setFixedHeight(70)
+        self.notes_input.setFixedHeight(35)
 
         form = QFormLayout()
         form.addRow("Name", self.name_input)
@@ -68,11 +70,15 @@ class CustomersWidget(QWidget):
         self.table.setHorizontalHeaderLabels(self.headers)
         self.table.setSelectionBehavior(QTableWidget.SelectionBehavior.SelectRows)
         self.table.setEditTriggers(QTableWidget.EditTrigger.NoEditTriggers)
+        self.table.setMinimumHeight(110)
+        self.table.setMaximumHeight(180)
         self.table.cellClicked.connect(self.select_customer)
+        self.table.itemSelectionChanged.connect(self._select_current_customer)
         self.inbox_widget = CustomerInboxWidget(
             database_path,
             provider=email_provider,
             llm_provider=llm_provider,
+            allowed_senders=gmail_allowed_senders,
             parent=self,
         )
         self.inbox_widget.status_changed.connect(self.refresh)
@@ -88,12 +94,17 @@ class CustomersWidget(QWidget):
         # existing inbox/customer public attributes.
         self.customer_files_widget = self.files_widget
 
+        details_page = QWidget()
+        details_layout = QVBoxLayout(details_page)
+        details_layout.addLayout(form)
+        details_layout.addLayout(buttons)
+        details_layout.addWidget(self.table)
+        self.customer_tabs = QTabWidget()
+        self.customer_tabs.addTab(details_page, "Customer details")
+        self.customer_tabs.addTab(self.inbox_widget, "Inbox")
+        self.customer_tabs.addTab(self.files_widget, "Files")
         layout = QVBoxLayout(self)
-        layout.addLayout(form)
-        layout.addLayout(buttons)
-        layout.addWidget(self.table)
-        layout.addWidget(self.inbox_widget)
-        layout.addWidget(self.files_widget)
+        layout.addWidget(self.customer_tabs)
         self.refresh()
 
     def refresh(self) -> None:
@@ -115,6 +126,16 @@ class CustomersWidget(QWidget):
 
     def select_customer(self, row: int, _column: int) -> None:
         """Load the clicked row into the form for editing."""
+        self._select_customer_row(row)
+
+    def _select_current_customer(self) -> None:
+        """Handle keyboard and whole-row selections as well as mouse clicks."""
+        row = self.table.currentRow()
+        if row >= 0:
+            self._select_customer_row(row)
+
+    def _select_customer_row(self, row: int) -> None:
+        """Load the customer represented by one table row."""
         customer_id = self.table.item(row, 0).data(Qt.ItemDataRole.UserRole)
         self.selected_customer_id = int(customer_id)
         self.inbox_widget.set_customer(self.selected_customer_id)

@@ -66,6 +66,41 @@ def test_widget_imports_and_displays_selected_customer_email(qapp, tmp_path: Pat
     assert widget.email_table.item(0, 2).text() == "Could you call me back?"
 
 
+def test_widget_displays_unmatched_email(qapp, tmp_path: Path):
+    database_path = tmp_path / "unmatched-ui-test.db"
+    initialize_database(database_path)
+
+    class FixedProvider(MockEmailProvider):
+        def fetch_new_emails(self) -> list[dict[str, object]]:
+            return [
+                {
+                    "id": "unmatched-1",
+                    "from_name": "Unknown Sender",
+                    "from_email": "unknown@example.com",
+                    "subject": "Needs review",
+                    "body": "Please contact me.",
+                }
+            ]
+
+    widget = CustomersWidget(database_path, email_provider=FixedProvider())
+    widget.inbox_widget.import_sample_emails()
+
+    assert widget.inbox_widget.unmatched_table.rowCount() == 1
+    assert (
+        widget.inbox_widget.unmatched_table.item(0, 1).text()
+        == "Unknown Sender <unknown@example.com>"
+    )
+
+    add_customer(database_path, "KOTOR", "kotor@example.com")
+    widget.inbox_widget.refresh_unmatched()
+    widget.inbox_widget.unmatched_table.selectRow(0)
+    widget.inbox_widget.customer_combo.setCurrentText(
+        "KOTOR <kotor@example.com>"
+    )
+    widget.inbox_widget.assign_selected_email()
+    assert widget.inbox_widget.unmatched_table.rowCount() == 0
+
+
 def test_widget_creates_pending_draft_for_selected_email(qapp, tmp_path: Path):
     database_path = tmp_path / "draft-ui-test.db"
     initialize_database(database_path)

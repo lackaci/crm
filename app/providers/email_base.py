@@ -15,6 +15,6 @@ class EmailProvider(ABC):
     def fetch_new_emails(self) -> list[dict[str, Any]]:
         """Return newly available email records."""
 
-    @abstractmethod
     def send_email(self, to: str, subject: str, body: str) -> None:
-        """Send an email, raising :class:`EmailDeliveryError` on delivery failure."""
+        """Sending is deliberately unavailable until the later sending milestone."""
+        raise EmailDeliveryError("Sending email is disabled in this milestone.")

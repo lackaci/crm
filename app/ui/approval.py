@@ -40,10 +40,13 @@ class ApprovalQueueWidget(QWidget):
         provider: EmailProvider | None = None,
         parent: QWidget | None = None,
         email_provider: EmailProvider | None = None,
+        # M10 keeps delivery disabled even when older callers pass True.
+        sending_enabled: bool = False,
     ) -> None:
         super().__init__(parent)
         self.database_path = database_path
         self.provider = provider or email_provider or MockEmailProvider()
+        self.sending_enabled = False
         self._drafts = []
         self._selected_id: int | None = None
 
@@ -81,6 +84,8 @@ class ApprovalQueueWidget(QWidget):
         self.edit_button.clicked.connect(self.save_edit)
         self.reject_button.clicked.connect(self.reject)
         self.approve_button.clicked.connect(self.approve)
+        self.approve_button.setEnabled(False)
+        self.approve_button.setToolTip("Sending is disabled until M12.")
 
         actions = QHBoxLayout()
         actions.addWidget(self.edit_button)
@@ -123,6 +128,7 @@ class ApprovalQueueWidget(QWidget):
         self.edit_button.setEnabled(True)
         self.reject_button.setEnabled(True)
         self.approve_button.setEnabled(True)
+        self.approve_button.setEnabled(self.sending_enabled)
         email = get_email(self.database_path, draft.email_id)
         self.recipient_label.setText(email.from_email if email else "Unknown recipient")
         self.subject_label.setText(f"Re: {email.subject}" if email else "Unknown subject")
@@ -171,10 +177,17 @@ class ApprovalQueueWidget(QWidget):
         self.refresh()
 
     def approve(self) -> None:
+        if not self.sending_enabled:
+            return
         if self._selected_id is None:
             return
         try:
-            approve_draft(self.database_path, self._selected_id, self.provider)
+            approve_draft(
+                self.database_path,
+                self._selected_id,
+                self.provider,
+                sending_enabled=self.sending_enabled,
+            )
         except (EmailDeliveryError, ValueError, sqlite3.Error) as error:
             self._show_error("Could not approve draft", error)
             return

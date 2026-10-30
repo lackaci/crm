@@ -12,6 +12,7 @@ from app.db.faqs import FAQEntry, create_faq
 from app.reply.matcher import DEFAULT_THRESHOLD, find_best_faq
 from app.reply.pipeline import process_email
 from app.providers.llm_fake import FakeLLMProvider
+from app.providers.llm_cloud import CloudLLMProvider
 
 
 def _email(subject: str, body: str) -> EmailRecord:
@@ -73,6 +74,71 @@ def test_low_confidence_escalates_without_a_draft(tmp_path: Path) -> None:
 
     assert result.status == "escalated"
     assert list_drafts(path) == []
+
+
+def test_cloud_customer_data_is_fail_closed_before_opener(tmp_path: Path, monkeypatch) -> None:
+    path = _database(tmp_path / "reply.db")
+    calls = []
+    monkeypatch.setenv("KEY", "secret")
+    provider = CloudLLMProvider(
+        "https://example.invalid", "m", "KEY",
+        opener=lambda request, timeout: calls.append(request),
+    )
+
+    result = process_email(_email("Opening hours", "When are you open?"), path, provider)
+
+    assert result.status == "escalated"
+    assert "before M10" in (result.reason or "")
+    assert calls == []
+    assert list_drafts(path) == []
+
+
+class EmbeddingUnavailableProvider(FakeLLMProvider):
+    def embed(self, text: str) -> list[float]:
+        raise NotImplementedError("embedding unavailable")
+
+
+def test_embedding_limitation_escalates_without_ui_exception(tmp_path: Path) -> None:
+    path = _database(tmp_path / "reply.db")
+
+    result = process_email(
+        _email("Opening hours", "When are you open?"),
+        path,
+        EmbeddingUnavailableProvider(),
+    )
+
+    assert result.status == "escalated"
+    assert "embedding" in (result.reason or "")
+    assert list_drafts(path) == []
+
+
+class CallbackProvider(FakeLLMProvider):
+    def __init__(self, callback):
+        self.audit_callback = callback
+
+    def complete(self, system: str, prompt: str, json_mode: bool = False) -> str:
+        self.audit_callback({
+            "provider": "fake", "model": "offline", "prompt_version": "reply_v1",
+            "faq_id": 1, "prompt_tokens": 1, "completion_tokens": 1,
+            "total_tokens": 2, "cost": None,
+        })
+        return super().complete(system, prompt, json_mode)
+
+
+def test_provider_callback_produces_one_complete_audit_record(tmp_path: Path) -> None:
+    path = _database(tmp_path / "reply.db")
+    records = []
+    result = process_email(
+        _email("Opening hours", "When are you open?"),
+        path,
+        CallbackProvider(records.append),
+        audit_callback=records.append,
+    )
+
+    assert result.status == "pending"
+    assert len(records) == 1
+    assert records[0]["faq_id"] == 1
+    assert "When are you open?" not in repr(records)
 
 
 @pytest.mark.parametrize("text", [

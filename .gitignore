@@ -4,3 +4,7 @@
 __pycache__/
 *.py[cod]
 .pytest_cache/
+# Local Google OAuth files only; do not ignore arbitrary JSON files.
+/credentials.json
+/token.json
+/.google-oauth/

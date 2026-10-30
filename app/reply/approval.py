@@ -87,45 +87,20 @@ def approve_draft(
     draft_id: int,
     provider: EmailProvider,
     actor: str = "reviewer",
+    sending_enabled: bool = False,
 ) -> ApprovalResult:
-    """Send one pending draft, then mark it approved.
+    """Block delivery until the later sending milestone.
 
-    The provider is called before the status update.  Provider failures are
-    audited and re-raised, so a failed delivery can never become approved.
+    ``sending_enabled`` remains accepted for compatibility, but is ignored.
+    M10 intentionally exposes no enabled sending path.
     """
     _validate_id(draft_id)
     with open_database(database_path) as connection:
         row = _pending_row(connection, draft_id)
-        recipient = str(row["from_email"])
-        subject = str(row["subject"])
-        body = str(row["body"])
-        try:
-            provider.send_email(recipient, f"Re: {subject}", body)
-        except EmailDeliveryError as error:
-            _audit(
-                connection,
-                actor,
-                "draft_send_failed",
-                f"draft_id={draft_id}; error={type(error).__name__}: {error}",
-            )
-            # The context manager would roll this audit back while re-raising.
-            connection.commit()
-            raise
-
-        connection.execute(
-            "UPDATE draft_replies SET status = ? WHERE id = ?",
-            ("approved", draft_id),
-        )
-        _audit(
-            connection,
-            actor,
-            "draft_approved",
-            f"draft_id={draft_id}; sent/mock-sent",
-        )
-        connection.execute(
-            "UPDATE emails SET status = 'done' WHERE id = ?", (int(row["email_id"]),)
-        )
-        return ApprovalResult(_load_draft(connection, draft_id), "sent/mock-sent")
+        _audit(connection, actor, "draft_send_blocked",
+               f"draft_id={draft_id}; sending_disabled_until_m12")
+        connection.commit()
+        raise ValueError("Sending is disabled until the sending milestone.")
 
 
 def _pending_row(connection: sqlite3.Connection, draft_id: int) -> sqlite3.Row:

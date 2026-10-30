@@ -66,11 +66,13 @@ class CustomerFilesWidget(QWidget):
         self.files_table.setSelectionBehavior(
             QTableWidget.SelectionBehavior.SelectRows
         )
+        self.files_table.setMaximumHeight(52)
 
         layout = QVBoxLayout(self)
         layout.addWidget(QLabel("Customer files"))
         layout.addLayout(form)
         layout.addWidget(self.files_table)
+        self.setFixedHeight(145)
 
         # Friendly aliases make the small widget convenient to use in tests
         # and from other beginner-level screens.

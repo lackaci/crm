@@ -3,9 +3,12 @@
 import json
 import re
 from dataclasses import dataclass
+from pathlib import Path
+from typing import Callable
 
 from app.db.faqs import FAQEntry
-from app.providers.llm_base import LLMProvider
+from app.providers.llm_base import CustomerDataNotAllowedError, LLMProvider
+from app.providers.llm_masked import MaskedLLMProvider
 
 
 @dataclass(frozen=True)
@@ -14,21 +17,44 @@ class ReplyDraft:
     reply: str
 
 
-def draft_reply(email: object, faq: FAQEntry, llm: LLMProvider) -> ReplyDraft:
+PROMPT_VERSION = "reply_v1"
+PROMPT_PATH = Path(__file__).parents[1] / "prompts" / f"{PROMPT_VERSION}.txt"
+
+
+def draft_reply(email: object, faq: FAQEntry, llm: LLMProvider,
+                audit_callback: Callable[[dict], None] | None = None) -> ReplyDraft:
     """Ask only for a rewrite of the selected approved answer."""
-    system = (
-        "You rewrite customer replies safely. Use only the facts in APPROVED_ANSWER. "
-        "Do not add prices, dates, links or promises. "
-        "Return JSON: {faq_id, reply}."
-    )
+    if not getattr(llm, "accepts_customer_data", False):
+        raise CustomerDataNotAllowedError(
+            "customer-bearing cloud drafting is disabled before M10"
+        )
+    lines = PROMPT_PATH.read_text(encoding="utf-8").splitlines()
+    system = "\n".join(lines[:3])
     prompt = (
         f"FAQ_ID: {faq.id}\nAPPROVED_ANSWER: {faq.answer}\n"
         f"CUSTOMER_NAME: {getattr(email, 'from_name', '')}\n"
         f"EMAIL_CONTEXT: subject={getattr(email, 'subject', '')}; "
         f"body={getattr(email, 'body', '')}\n"
-        "Rewrite the approved answer only, greeting the customer by name."
+        + lines[3]
     )
-    raw = llm.complete(system, prompt, json_mode=True)
+    # Give providers that expose an audit sink the pipeline sink before the
+    # invocation.  This lets cloud failures audit too; a post-call fallback
+    # would miss failures and could duplicate successful cloud records.
+    provider_has_audit_sink = hasattr(llm, "audit_callback")
+    if audit_callback and provider_has_audit_sink:
+        llm.audit_callback = audit_callback
+    safe_llm = llm if isinstance(llm, MaskedLLMProvider) else MaskedLLMProvider(llm)
+    raw = safe_llm.complete(system, prompt, json_mode=True)
+    # Keep the fallback for simple providers (including test doubles) without
+    # ever recording prompt or customer content.
+    if audit_callback and not provider_has_audit_sink:
+        audit_callback({
+            "provider": type(llm).__name__.removesuffix("LLMProvider").lower(),
+            "model": getattr(llm, "model", type(llm).__name__),
+            "prompt_version": PROMPT_VERSION, "faq_id": faq.id,
+            "prompt_tokens": None, "completion_tokens": None,
+            "total_tokens": None, "cost": None,
+        })
     try:
         value = json.loads(raw)
         if not isinstance(value, dict):

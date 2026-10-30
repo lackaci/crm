@@ -10,6 +10,8 @@ from .llm_base import LLMProvider
 class FakeLLMProvider(LLMProvider):
     """A safe placeholder that never calls a network service."""
 
+    accepts_customer_data = True
+
     def complete(self, system: str, prompt: str, json_mode: bool = False) -> str:
         """Return a deterministic response without model knowledge."""
         if json_mode:

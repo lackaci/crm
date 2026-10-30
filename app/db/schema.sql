@@ -12,6 +12,10 @@ CREATE TABLE IF NOT EXISTS emails (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     customer_id INTEGER REFERENCES customers(id),
     external_id TEXT,
+    provider TEXT NOT NULL DEFAULT 'mock',
+    remote_message_id TEXT,
+    remote_thread_id TEXT,
+    labels TEXT NOT NULL DEFAULT '[]',
     from_name TEXT NOT NULL,
     from_email TEXT NOT NULL,
     subject TEXT NOT NULL,
@@ -46,6 +50,8 @@ CREATE TABLE IF NOT EXISTS files (
     filename TEXT NOT NULL,
     file_type TEXT NOT NULL,
     path TEXT NOT NULL,
+    source_email_id INTEGER REFERENCES emails(id),
+    source_attachment_id TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 

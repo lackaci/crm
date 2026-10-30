@@ -4,11 +4,13 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .email_base import EmailProvider
+from .email_base import EmailDeliveryError, EmailProvider
 
 
 class MockEmailProvider(EmailProvider):
-    """Reads sample emails and prints instead of sending real mail."""
+    """Reads sample emails and emits no customer message contents."""
+
+    provider_name = "mock"
 
     def __init__(self, data_path: Path | None = None) -> None:
         project_root = Path(__file__).resolve().parents[2]
@@ -23,5 +25,5 @@ class MockEmailProvider(EmailProvider):
         return records
 
     def send_email(self, to: str, subject: str, body: str) -> None:
-        """Print the message instead of sending it."""
-        print(f"[mock email] To: {to} | Subject: {subject}\n{body}")
+        """Sending is unavailable at the provider boundary during M11."""
+        raise EmailDeliveryError("Sending email is disabled in this milestone.")

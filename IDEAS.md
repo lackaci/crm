@@ -1,0 +1,1 @@
+An automatic database generator, panipulator from txt so every detail can be accesed by a prompt

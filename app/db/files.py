@@ -22,6 +22,7 @@ class CustomerFile:
     file_type: str
     path: str
     created_at: str
+    source_email_id: int | None = None
 
 
 # A descriptive compatibility name for callers that prefer "record" terminology.
@@ -96,7 +97,8 @@ def store_file(
             )
             row = connection.execute(
                 """
-                SELECT id, customer_id, filename, file_type, path, created_at
+                SELECT id, customer_id, filename, file_type, path, created_at,
+                       source_email_id
                 FROM files WHERE id = ?
                 """,
                 (file_id,),
@@ -136,7 +138,8 @@ def list_files(database_path: Path, customer_id: int) -> list[CustomerFile]:
     with open_database(database_path) as connection:
         rows = connection.execute(
             """
-            SELECT id, customer_id, filename, file_type, path, created_at
+            SELECT id, customer_id, filename, file_type, path, created_at,
+                   source_email_id
             FROM files WHERE customer_id = ? ORDER BY id
             """,
             (customer_id,),
@@ -158,4 +161,9 @@ def _file_from_row(row: object) -> CustomerFile:
         file_type=str(row["file_type"]),  # type: ignore[index]
         path=str(row["path"]),  # type: ignore[index]
         created_at=str(row["created_at"]),  # type: ignore[index]
+        source_email_id=(
+            int(row["source_email_id"])
+            if row["source_email_id"] is not None
+            else None
+        ),
     )

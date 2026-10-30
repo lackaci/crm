@@ -1,2 +1,6 @@
 PySide6
 pytest
+python-dotenv
+keyring
+google-api-python-client
+google-auth-oauthlib

@@ -55,17 +55,31 @@ def _actions(database_path):
         ]
 
 
-def test_approve_sends_once_then_approves(database_path):
+def test_approve_is_hard_blocked_even_when_sending_enabled(database_path):
     path, email_id = database_path
     draft_id = _draft(path, email_id)
     provider = RecordingProvider()
 
-    result = approve_draft(path, draft_id, provider, actor="reviewer")
+    with pytest.raises(ValueError, match="until the sending milestone"):
+        approve_draft(path, draft_id, provider, actor="reviewer",
+                      sending_enabled=True)
 
-    assert len(provider.calls) == 1
-    assert provider.calls[0] == ("ada@example.com", "Re: Question", "A reply.")
-    assert result.draft.status == "approved"
-    assert "draft_approved" in _actions(path)
+    assert provider.calls == []
+    assert list_pending_drafts(path)[0].status == "pending"
+    assert "draft_send_blocked" in _actions(path)
+
+
+def test_approve_is_blocked_by_default_before_provider_call(database_path):
+    path, email_id = database_path
+    draft_id = _draft(path, email_id)
+    provider = RecordingProvider()
+
+    with pytest.raises(ValueError, match="Sending is disabled"):
+        approve_draft(path, draft_id, provider)
+
+    assert provider.calls == []
+    assert list_pending_drafts(path)[0].status == "pending"
+    assert "draft_send_blocked" in _actions(path)
 
 
 def test_edit_and_reject_never_send_and_audit(database_path):
@@ -83,20 +97,21 @@ def test_edit_and_reject_never_send_and_audit(database_path):
     assert "draft_rejected" in actions
 
 
-def test_failed_send_is_audited_and_does_not_approve(database_path):
+def test_approval_never_reaches_provider_or_audits_provider_failure(database_path):
     path, email_id = database_path
     draft_id = _draft(path, email_id)
     provider = RecordingProvider(fail=True)
 
-    with pytest.raises(EmailDeliveryError, match="unavailable"):
-        approve_draft(path, draft_id, provider)
+    with pytest.raises(ValueError, match="until the sending milestone"):
+        approve_draft(path, draft_id, provider, sending_enabled=True)
 
     with open_database(path) as connection:
         status = connection.execute(
             "SELECT status FROM draft_replies WHERE id = ?", (draft_id,)
         ).fetchone()["status"]
     assert status == "pending"
-    assert "draft_send_failed" in _actions(path)
+    assert "draft_send_blocked" in _actions(path)
+    assert "draft_send_failed" not in _actions(path)
 
 
 def test_only_pending_drafts_can_be_acted_on(database_path):
@@ -105,5 +120,7 @@ def test_only_pending_drafts_can_be_acted_on(database_path):
     reject_draft(path, draft_id)
 
     with pytest.raises(ValueError, match="pending"):
-        approve_draft(path, draft_id, RecordingProvider())
+        approve_draft(
+            path, draft_id, RecordingProvider(), sending_enabled=True
+        )
     assert list_pending_drafts(path) == []
