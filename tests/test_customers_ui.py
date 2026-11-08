@@ -93,6 +93,7 @@ def test_widget_displays_unmatched_email(qapp, tmp_path: Path):
 
     add_customer(database_path, "KOTOR", "kotor@example.com")
     widget.inbox_widget.refresh_unmatched()
+    widget.inbox_widget.choose_filter("assignment")
     widget.inbox_widget.unmatched_table.selectRow(0)
     widget.inbox_widget.customer_combo.setCurrentText(
         "KOTOR <kotor@example.com>"

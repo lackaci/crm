@@ -1,14 +1,12 @@
-"""Offline settings panel for M08.
-
-This panel edits configuration choices only.  It never creates a provider or
-performs an external call.
-"""
+"""Gmail connection settings with a separate offline configuration preview."""
 
 from PySide6.QtWidgets import (
     QComboBox,
     QFormLayout,
     QLabel,
     QPushButton,
+    QToolButton,
+    QScrollArea,
     QVBoxLayout,
     QWidget,
 )
@@ -20,7 +18,7 @@ from .privacy_preview import PrivacyPreviewWidget
 class SettingsWidget(QWidget):
     """Display and edit the selected mode and provider safely."""
 
-    def __init__(self, config: AppConfig | None = None, parent=None) -> None:
+    def __init__(self, config: AppConfig | None = None, parent=None, database_path=None, demo_mode=False) -> None:
         super().__init__(parent)
         self.config = config or load_config()
 
@@ -34,7 +32,7 @@ class SettingsWidget(QWidget):
         self.provider_combo.addItems(sorted(ALLOWED_PROVIDERS))
         self.provider_combo.setCurrentText(self.config.provider)
 
-        self.save_button = QPushButton("Apply settings")
+        self.save_button = QPushButton("Check these settings")
         self.save_button.clicked.connect(self.apply_settings)
         self.status_label = QLabel()
         self.status_label.setWordWrap(True)
@@ -43,24 +41,53 @@ class SettingsWidget(QWidget):
         form = QFormLayout()
         form.addRow("Mode", self.mode_combo)
         form.addRow("Provider", self.provider_combo)
-        layout = QVBoxLayout(self)
-        layout.addWidget(QLabel("Integration settings"))
-        layout.addWidget(QLabel(
-            "M08 is offline-only. Sending is disabled in every mode; "
-            "Gmail and cloud providers are names for future milestones."
+        content = QWidget()
+        layout = QVBoxLayout(content)
+        self.content_layout = layout
+        self.gmail_widget = None
+        if database_path is not None:
+            from .gmail_connection import GmailConnectionWidget
+            self.gmail_widget = GmailConnectionWidget(database_path, self.config, demo_mode=demo_mode)
+            layout.addWidget(self.gmail_widget)
+        preview = QWidget()
+        preview_layout = QVBoxLayout(preview)
+        preview_layout.addWidget(QLabel(
+            "This tool only checks configuration choices. Use Gmail connection "
+            "above to connect an account and apply its delivery settings."
         ))
-        layout.addLayout(form)
-        layout.addWidget(self.save_button)
-        layout.addWidget(self.status_label)
+        preview_layout.addLayout(form)
+        preview_layout.addWidget(self.save_button)
+        preview_layout.addWidget(self.status_label)
+        preview_toggle = QToolButton()
+        preview_toggle.setText("Advanced configuration preview")
+        preview_toggle.setCheckable(True)
+        preview_toggle.toggled.connect(preview.setVisible)
+        layout.addWidget(preview_toggle)
+        layout.addWidget(preview)
+        preview.hide()
         self.privacy_preview_widget = PrivacyPreviewWidget()
+        self.privacy_toggle = QToolButton()
+        self.privacy_toggle.setText("Privacy preview (advanced)")
+        self.privacy_toggle.setCheckable(True)
+        self.privacy_toggle.toggled.connect(self.privacy_preview_widget.setVisible)
+        layout.addWidget(self.privacy_toggle)
         layout.addWidget(self.privacy_preview_widget)
+        self.privacy_preview_widget.hide()
         layout.addStretch()
+        scroll = QScrollArea()
+        self.scroll = scroll
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setWidget(content)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(scroll)
         self._show_ready()
 
     def _show_ready(self) -> None:
         self.status_label.setText(
             f"Selected: {self.config.mode.value} / {self.config.provider}. "
-            "No API calls are made. Sending is disabled."
+            "No API calls were made by this settings check. Sending is disabled in this preview."
         )
 
     def apply_settings(self) -> None:

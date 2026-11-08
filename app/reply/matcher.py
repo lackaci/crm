@@ -9,7 +9,9 @@ from typing import Sequence
 from app.db.faqs import FAQEntry
 from app.providers.llm_base import LLMProvider
 
-DEFAULT_THRESHOLD = 0.75
+# The M15 sweep found 0.60 is the lowest threshold with no unsafe drafts
+# or wrong FAQ selections in the reviewed offline golden set.
+DEFAULT_THRESHOLD = 0.60
 
 
 @dataclass(frozen=True)
@@ -82,13 +84,17 @@ def lexical_overlap(email_text: str, question: str) -> float:
 def find_best_faq(email: object, faqs: Sequence[FAQEntry], llm: LLMProvider) -> MatchResult:
     """Use the stronger of semantic and transparent lexical matching.
 
-    The threshold stays at 0.75.  A lexical score is useful for short,
+    Keep this filter here as well as in the database loader.  Callers such as
+    the FAQ test tool can pass an arbitrary list, and a draft or inactive
+    answer must never become model context just because it scores highly.
+    The configured threshold is applied by the pipeline (default 0.60).  A lexical score is useful for short,
     perfectly descriptive subjects where a small fake/embedding model can
     under-score an otherwise obvious FAQ.  Taking the maximum is safe here
     because lexical matching only considers content-word overlap; unrelated
     text such as "change my account" gets zero.
     """
-    if not faqs:
+    approved_faqs = tuple(faq for faq in faqs if faq.status == "approved")
+    if not approved_faqs:
         return MatchResult(None, 0.0)
     text = f"{getattr(email, 'subject', '')}\n{getattr(email, 'body', '')}"
     email_vector = llm.embed(text)
@@ -100,7 +106,7 @@ def find_best_faq(email: object, faqs: Sequence[FAQEntry], llm: LLMProvider) -> 
                 lexical_overlap(text, faq.question),
             ),
         )
-        for faq in faqs
+        for faq in approved_faqs
     )
     faq, score = max(scored, key=lambda item: item[1])
     return MatchResult(faq, score)

@@ -29,7 +29,9 @@ def list_pending_drafts(database_path: Path) -> list[DraftReply]:
             """
             SELECT id, email_id, faq_id, status, body, created_at
             FROM draft_replies
-            WHERE status = ?
+            WHERE status = ? AND NOT EXISTS(
+                SELECT 1 FROM desktop_outbox o
+                WHERE o.email_id=draft_replies.email_id AND o.status='sent')
             ORDER BY id
             """,
             ("pending",),
@@ -50,7 +52,10 @@ def edit_draft(
         raise ValueError("Draft body is required.")
 
     with open_database(database_path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
         _pending_row(connection, draft_id)
+        from .delivery import require_editable
+        require_editable(connection, draft_id)
         connection.execute(
             "UPDATE draft_replies SET body = ? WHERE id = ?",
             (body, draft_id),
@@ -73,7 +78,10 @@ def reject_draft(
     """Reject a pending draft without contacting the email provider."""
     _validate_id(draft_id)
     with open_database(database_path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
         _pending_row(connection, draft_id)
+        from .delivery import require_editable
+        require_editable(connection, draft_id)
         connection.execute(
             "UPDATE draft_replies SET status = ? WHERE id = ?",
             ("rejected", draft_id),

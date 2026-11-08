@@ -37,6 +37,9 @@ def test_main_window_disables_send_in_m08(qapp, tmp_path: Path):
         config=AppConfig(mode=RunMode.MOCK, provider="mock"),
     )
 
-    assert window.tabs.count() == 3
+    assert window.pages.count() == 8
+    assert window.pages.widget(7) is window.replied_widget
+    assert window.navigation.item(7).text() == 'Replied'
+    assert window.navigation.count() == 8
     assert not window.approval_widget.approve_button.isEnabled()
     assert "Sending is disabled" in window.approval_widget.approve_button.toolTip()

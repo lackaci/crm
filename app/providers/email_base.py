@@ -2,10 +2,30 @@
 
 from abc import ABC, abstractmethod
 from typing import Any
+from dataclasses import dataclass
 
 
 class EmailDeliveryError(Exception):
     """Expected failure while delivering an email through a provider."""
+
+
+class DeliveryRejected(EmailDeliveryError):
+    """The operation is known not to have been accepted."""
+
+
+class DeliveryUncertain(EmailDeliveryError):
+    """An external mutation may have succeeded; never retry blindly."""
+
+
+@dataclass(frozen=True)
+class ReviewedReply:
+    sender: str
+    recipient: str
+    subject: str
+    body: str
+    rfc_message_id: str
+    thread_id: str | None = None
+    original_message_id: str | None = None
 
 
 class EmailProvider(ABC):

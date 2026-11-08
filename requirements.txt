@@ -4,3 +4,7 @@ python-dotenv
 keyring
 google-api-python-client
 google-auth-oauthlib
+httpx>=0.27,<1
+openpyxl>=3.1,<4
+pypdfium2>=4.30,<6
+Pillow>=11,<13

@@ -16,6 +16,7 @@ from PySide6.QtWidgets import (
     QPushButton,
     QTableWidget,
     QTableWidgetItem,
+    QTabWidget,
     QVBoxLayout,
     QWidget,
 )
@@ -66,13 +67,26 @@ class CustomerFilesWidget(QWidget):
         self.files_table.setSelectionBehavior(
             QTableWidget.SelectionBehavior.SelectRows
         )
-        self.files_table.setMaximumHeight(52)
+        self.files_table.setMinimumHeight(180)
+        self.files_table.verticalHeader().hide()
 
-        layout = QVBoxLayout(self)
+        stored_page = QWidget()
+        layout = QVBoxLayout(stored_page)
         layout.addWidget(QLabel("Customer files"))
         layout.addLayout(form)
-        layout.addWidget(self.files_table)
-        self.setFixedHeight(145)
+        layout.addWidget(self.files_table, 1)
+        self.empty_label = QLabel("Choose a customer above to see their files.")
+        self.empty_label.setWordWrap(True)
+        layout.addWidget(self.empty_label)
+        from .documents import DocumentsWidget
+        self.documents_widget = DocumentsWidget(database_path, storage_root, self)
+        self.file_tabs = QTabWidget()
+        self.file_tabs.addTab(stored_page, "Stored files")
+        self.file_tabs.addTab(self.documents_widget, "Excel register (all customers)")
+        self.file_tabs.currentChanged.connect(lambda index: self.documents_widget.refresh() if index == 1 else None)
+        outer = QVBoxLayout(self)
+        outer.setContentsMargins(0, 0, 0, 0)
+        outer.addWidget(self.file_tabs)
 
         # Friendly aliases make the small widget convenient to use in tests
         # and from other beginner-level screens.
@@ -123,6 +137,8 @@ class CustomerFilesWidget(QWidget):
         self.selected_file_path = None
         self.file_path_label.setText("No file selected")
         self.refresh()
+        self.documents_widget.refresh()
+        self.documents_widget.process_automatically()
 
     # A short method name is useful for callers that trigger the action in
     # code, while the button remains labelled with plain user language.
@@ -132,9 +148,13 @@ class CustomerFilesWidget(QWidget):
         """Reload the selected customer's stored-file list."""
         if self.selected_customer_id is None:
             self.files_table.setRowCount(0)
+            self.empty_label.setText("Choose a customer above to see their files.")
+            self.add_file_button.setEnabled(False)
             return
 
         files = list_files(self.database_path, self.selected_customer_id)
+        self.add_file_button.setEnabled(True)
+        self.empty_label.setText("No files yet. Choose a local file to add one." if not files else f"{len(files)} file(s) for this customer.")
         self.files_table.setRowCount(len(files))
         for row, customer_file in enumerate(files):
             self.files_table.setItem(row, 0, QTableWidgetItem(customer_file.filename))

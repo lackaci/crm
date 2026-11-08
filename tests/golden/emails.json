@@ -1,71 +1,717 @@
-[
-  {"id":"g001","subject":"Opening hours","body":"What are your opening hours?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g002","subject":"Opening hours","body":"Could you tell me your opening hours?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g003","subject":"Friday opening hours","body":"What are your opening hours on Friday?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g004","subject":"Weekday hours","body":"Please let me know your weekday opening times.","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g005","subject":"Opening hours","body":"What time are your opening hours during the week?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g006","subject":"Are you open","body":"What are your opening hours today?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g007","subject":"Closing time","body":"What are your opening hours on working days?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-  {"id":"g008","subject":"Weekend question","body":"Do you have opening hours on weekends?","expected_status":"pending","expected_faq_id":1,"category":"opening-hours"},
-
-  {"id":"g009","subject":"Invoice copy","body":"I cannot find the invoice for my order. Could you help?","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g010","subject":"Where is my invoice","body":"Where can I find my invoice?","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g011","subject":"Missing invoice","body":"The invoice is missing from my confirmation email.","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g012","subject":"Invoice help","body":"Please help me locate the invoice.","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g013","subject":"Resend invoice","body":"I lost the invoice. Can you resend it?","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g014","subject":"Order paperwork","body":"How do I get the invoice for my order?","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g015","subject":"Confirmation email","body":"My confirmation email has no invoice attached.","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-  {"id":"g016","subject":"Invoice location","body":"Could you tell me where the order invoice was sent?","expected_status":"pending","expected_faq_id":2,"category":"invoice"},
-
-  {"id":"g017","subject":"Delivery time","body":"How long does delivery usually take?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g018","subject":"Delivery arrival","body":"When should my order delivery arrive?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g019","subject":"Shipping duration","body":"Please tell me the usual delivery duration.","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g020","subject":"Delivery question","body":"How soon will delivery arrive for the order?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g021","subject":"Delivery question","body":"What is the normal time for delivery after ordering?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g022","subject":"Delivery times","body":"Could you explain your delivery times?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g023","subject":"Parcel delivery","body":"How long until the delivery gets here?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-  {"id":"g024","subject":"Order dispatch","body":"When can I expect delivery of my order?","expected_status":"pending","expected_faq_id":3,"category":"delivery"},
-
-  {"id":"g025","subject":"Forgotten password","body":"I forgot my password. How can I reset it?","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g026","subject":"Reset login","body":"How do I reset my login password?","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g027","subject":"Cannot log in","body":"I cannot log in because I need to reset my password.","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g028","subject":"Password help","body":"Please explain how to reset my forgotten password.","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g029","subject":"Login access","body":"Where is the password reset option?","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g030","subject":"Reset link","body":"I need a reset email for my forgotten password.","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g031","subject":"Account login","body":"Can you help me reset my password and regain access?","expected_status":"pending","expected_faq_id":4,"category":"password"},
-  {"id":"g032","subject":"Forgot password","body":"What should I do to reset my login password?","expected_status":"pending","expected_faq_id":4,"category":"password"},
-
-  {"id":"g033","subject":"A question","body":"Can you help with my garden?","expected_status":"escalated","expected_faq_id":null,"category":"unrelated"},
-  {"id":"g034","subject":"Product idea","body":"Do you recommend a good book for travel?","expected_status":"escalated","expected_faq_id":null,"category":"unrelated"},
-  {"id":"g035","subject":"Account question","body":"I have a question about something not covered here.","expected_status":"escalated","expected_faq_id":null,"category":"low-confidence"},
-  {"id":"g036","subject":"Other request","body":"Can someone advise me about a matter outside the shop?","expected_status":"escalated","expected_faq_id":null,"category":"low-confidence"},
-  {"id":"g037","subject":"Please advise","body":"I need assistance with an unspecified issue.","expected_status":"escalated","expected_faq_id":null,"category":"unclear"},
-  {"id":"g038","subject":"Help","body":"I need help.","expected_status":"escalated","expected_faq_id":null,"category":"unclear"},
-  {"id":"g039","subject":"","body":"","expected_status":"escalated","expected_faq_id":null,"category":"empty"},
-  {"id":"g040","subject":"...","body":"!!!","expected_status":"escalated","expected_faq_id":null,"category":"punctuation-only"},
-  {"id":"g041","subject":"12345","body":"67890","expected_status":"escalated","expected_faq_id":null,"category":"number-only"},
-
-  {"id":"g042","subject":"Refund request","body":"I want a refund for my order.","expected_status":"escalated","expected_faq_id":null,"category":"refund"},
-  {"id":"g043","subject":"Money back","body":"Please give my money back.","expected_status":"escalated","expected_faq_id":null,"category":"refund"},
-  {"id":"g044","subject":"Return and refund","body":"How can I get a refund?","expected_status":"escalated","expected_faq_id":null,"category":"refund"},
-  {"id":"g045","subject":"Legal notice","body":"I will sue if this is not resolved.","expected_status":"escalated","expected_faq_id":null,"category":"legal-threat"},
-  {"id":"g046","subject":"Lawyer involved","body":"My lawyer will contact you about this matter.","expected_status":"escalated","expected_faq_id":null,"category":"legal-threat"},
-  {"id":"g047","subject":"Legal action","body":"I am considering legal action against the company.","expected_status":"escalated","expected_faq_id":null,"category":"legal-threat"},
-  {"id":"g048","subject":"Very angry","body":"This is outrageous and completely unacceptable.","expected_status":"escalated","expected_faq_id":null,"category":"anger"},
-  {"id":"g049","subject":"Complaint","body":"I am angry about the terrible service.","expected_status":"escalated","expected_faq_id":null,"category":"anger"},
-  {"id":"g050","subject":"Disappointed","body":"Your service has failed me and I want to complain.","expected_status":"escalated","expected_faq_id":null,"category":"complaint"},
-  {"id":"g051","subject":"Price question","body":"How much does delivery cost?","expected_status":"escalated","expected_faq_id":null,"category":"money"},
-  {"id":"g052","subject":"Cost","body":"What is the cost of a custom order?","expected_status":"escalated","expected_faq_id":null,"category":"money"},
-  {"id":"g053","subject":"Price request","body":"Please tell me the price of this item.","expected_status":"escalated","expected_faq_id":null,"category":"money"},
-  {"id":"g054","subject":"Currency question","body":"Can you charge me 20 euros for shipping?","expected_status":"escalated","expected_faq_id":null,"category":"money"},
-  {"id":"g055","subject":"Custom product","body":"Can you make a table in a custom size?","expected_status":"escalated","expected_faq_id":null,"category":"custom-order"},
-  {"id":"g056","subject":"Change my order","body":"I need a special product made to my measurements.","expected_status":"escalated","expected_faq_id":null,"category":"custom-order"},
-  {"id":"g057","subject":"Account security","body":"Someone may have accessed my account and I need urgent help.","expected_status":"escalated","expected_faq_id":null,"category":"security"},
-  {"id":"g058","subject":"Wrong order","body":"The item in my order is wrong and I need a solution.","expected_status":"escalated","expected_faq_id":null,"category":"complaint"},
-  {"id":"g059","subject":"Where is my parcel","body":"My parcel is late and I am very upset.","expected_status":"escalated","expected_faq_id":null,"category":"complaint"},
-  {"id":"g060","subject":"Charge dispute","body":"I was charged an amount I do not recognize.","expected_status":"escalated","expected_faq_id":null,"category":"money"},
-  {"id":"g061","subject":"Refund and lawyer","body":"Refund me now or my lawyer will sue.","expected_status":"escalated","expected_faq_id":null,"category":"refund-legal"},
-  {"id":"g062","subject":"Bad experience","body":"This awful service makes me furious.","expected_status":"escalated","expected_faq_id":null,"category":"anger"},
-  {"id":"g063","subject":"Delivery complaint","body":"Why is delivery late? I demand compensation.","expected_status":"escalated","expected_faq_id":null,"category":"complaint-money"},
-  {"id":"g064","subject":"Unclear request","body":"Can you do it for me?","expected_status":"escalated","expected_faq_id":null,"category":"low-confidence"}
+﻿[
+    {
+        "id":  "g001",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Opening hours",
+        "body":  "What are your opening hours?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g002",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Opening hours",
+        "body":  "Could you tell me your opening hours?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g003",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Friday opening hours",
+        "body":  "What are your opening hours on Friday?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g004",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Weekday hours",
+        "body":  "Please let me know your weekday opening times.",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g005",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Opening hours",
+        "body":  "What time are your opening hours during the week?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g006",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Are you open",
+        "body":  "What are your opening hours today?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g007",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Closing time",
+        "body":  "What are your opening hours on working days?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g008",
+        "category":  "opening-hours",
+        "from_name":  "Golden Customer",
+        "subject":  "Weekend question",
+        "body":  "Do you have opening hours on weekends?",
+        "expected":  "draft",
+        "expected_faq_id":  1,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g009",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Invoice copy",
+        "body":  "I cannot find the invoice for my order. Could you help?",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g010",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Where is my invoice",
+        "body":  "Where can I find my invoice?",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g011",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Missing invoice",
+        "body":  "The invoice is missing from my confirmation email.",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g012",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Invoice help",
+        "body":  "Please help me locate the invoice.",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g013",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Resend invoice",
+        "body":  "I lost the invoice. Can you resend it?",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g014",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Order paperwork",
+        "body":  "How do I get the invoice for my order?",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g015",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Confirmation email",
+        "body":  "My confirmation email has no invoice attached.",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g016",
+        "category":  "invoice",
+        "from_name":  "Golden Customer",
+        "subject":  "Invoice location",
+        "body":  "Could you tell me where the order invoice was sent?",
+        "expected":  "draft",
+        "expected_faq_id":  2,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g017",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery time",
+        "body":  "How long does delivery usually take?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g018",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery arrival",
+        "body":  "When should my order delivery arrive?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g019",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Shipping duration",
+        "body":  "Please tell me the usual delivery duration.",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g020",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery question",
+        "body":  "How soon will delivery arrive for the order?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g021",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery question",
+        "body":  "What is the normal time for delivery after ordering?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g022",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery times",
+        "body":  "Could you explain your delivery times?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g023",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Parcel delivery",
+        "body":  "How long until the delivery gets here?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g024",
+        "category":  "delivery",
+        "from_name":  "Golden Customer",
+        "subject":  "Order dispatch",
+        "body":  "When can I expect delivery of my order?",
+        "expected":  "draft",
+        "expected_faq_id":  3,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g025",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Forgotten password",
+        "body":  "I forgot my password. How can I reset it?",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g026",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Reset login",
+        "body":  "How do I reset my login password?",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g027",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Cannot log in",
+        "body":  "I cannot log in because I need to reset my password.",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g028",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Password help",
+        "body":  "Please explain how to reset my forgotten password.",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g029",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Login access",
+        "body":  "Where is the password reset option?",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g030",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Reset link",
+        "body":  "I need a reset email for my forgotten password.",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g031",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Account login",
+        "body":  "Can you help me reset my password and regain access?",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g032",
+        "category":  "password",
+        "from_name":  "Golden Customer",
+        "subject":  "Forgot password",
+        "body":  "What should I do to reset my login password?",
+        "expected":  "draft",
+        "expected_faq_id":  4,
+        "notes":  "Matches an approved FAQ."
+    },
+    {
+        "id":  "g033",
+        "category":  "unrelated",
+        "from_name":  "Golden Customer",
+        "subject":  "A question",
+        "body":  "Can you help with my garden?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g034",
+        "category":  "unrelated",
+        "from_name":  "Golden Customer",
+        "subject":  "Product idea",
+        "body":  "Do you recommend a good book for travel?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g035",
+        "category":  "low-confidence",
+        "from_name":  "Golden Customer",
+        "subject":  "Account question",
+        "body":  "I have a question about something not covered here.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g036",
+        "category":  "low-confidence",
+        "from_name":  "Golden Customer",
+        "subject":  "Other request",
+        "body":  "Can someone advise me about a matter outside the shop?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g037",
+        "category":  "unclear",
+        "from_name":  "Golden Customer",
+        "subject":  "Please advise",
+        "body":  "I need assistance with an unspecified issue.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g038",
+        "category":  "unclear",
+        "from_name":  "Golden Customer",
+        "subject":  "Help",
+        "body":  "I need help.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g039",
+        "category":  "empty",
+        "from_name":  "Golden Customer",
+        "subject":  "",
+        "body":  "",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g040",
+        "category":  "punctuation-only",
+        "from_name":  "Golden Customer",
+        "subject":  "...",
+        "body":  "!!!",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g041",
+        "category":  "number-only",
+        "from_name":  "Golden Customer",
+        "subject":  "12345",
+        "body":  "67890",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g042",
+        "category":  "refund",
+        "from_name":  "Golden Customer",
+        "subject":  "Refund request",
+        "body":  "I want a refund for my order.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g043",
+        "category":  "refund",
+        "from_name":  "Golden Customer",
+        "subject":  "Money back",
+        "body":  "Please give my money back.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g044",
+        "category":  "refund",
+        "from_name":  "Golden Customer",
+        "subject":  "Return and refund",
+        "body":  "How can I get a refund?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g045",
+        "category":  "legal-threat",
+        "from_name":  "Golden Customer",
+        "subject":  "Legal notice",
+        "body":  "I will sue if this is not resolved.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g046",
+        "category":  "legal-threat",
+        "from_name":  "Golden Customer",
+        "subject":  "Lawyer involved",
+        "body":  "My lawyer will contact you about this matter.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g047",
+        "category":  "legal-threat",
+        "from_name":  "Golden Customer",
+        "subject":  "Legal action",
+        "body":  "I am considering legal action against the company.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g048",
+        "category":  "anger",
+        "from_name":  "Golden Customer",
+        "subject":  "Very angry",
+        "body":  "This is outrageous and completely unacceptable.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g049",
+        "category":  "anger",
+        "from_name":  "Golden Customer",
+        "subject":  "Complaint",
+        "body":  "I am angry about the terrible service.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g050",
+        "category":  "complaint",
+        "from_name":  "Golden Customer",
+        "subject":  "Disappointed",
+        "body":  "Your service has failed me and I want to complain.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g051",
+        "category":  "money",
+        "from_name":  "Golden Customer",
+        "subject":  "Price question",
+        "body":  "How much does delivery cost?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g052",
+        "category":  "money",
+        "from_name":  "Golden Customer",
+        "subject":  "Cost",
+        "body":  "What is the cost of a custom order?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g053",
+        "category":  "money",
+        "from_name":  "Golden Customer",
+        "subject":  "Price request",
+        "body":  "Please tell me the price of this item.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g054",
+        "category":  "money",
+        "from_name":  "Golden Customer",
+        "subject":  "Currency question",
+        "body":  "Can you charge me 20 euros for shipping?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g055",
+        "category":  "custom-order",
+        "from_name":  "Golden Customer",
+        "subject":  "Custom product",
+        "body":  "Can you make a table in a custom size?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g056",
+        "category":  "custom-order",
+        "from_name":  "Golden Customer",
+        "subject":  "Change my order",
+        "body":  "I need a special product made to my measurements.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g057",
+        "category":  "security",
+        "from_name":  "Golden Customer",
+        "subject":  "Account security",
+        "body":  "Someone may have accessed my account and I need urgent help.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g058",
+        "category":  "complaint",
+        "from_name":  "Golden Customer",
+        "subject":  "Wrong order",
+        "body":  "The item in my order is wrong and I need a solution.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g059",
+        "category":  "complaint",
+        "from_name":  "Golden Customer",
+        "subject":  "Where is my parcel",
+        "body":  "My parcel is late and I am very upset.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g060",
+        "category":  "money",
+        "from_name":  "Golden Customer",
+        "subject":  "Charge dispute",
+        "body":  "I was charged an amount I do not recognize.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g061",
+        "category":  "refund-legal",
+        "from_name":  "Golden Customer",
+        "subject":  "Refund and lawyer",
+        "body":  "Refund me now or my lawyer will sue.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g062",
+        "category":  "anger",
+        "from_name":  "Golden Customer",
+        "subject":  "Bad experience",
+        "body":  "This awful service makes me furious.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g063",
+        "category":  "complaint-money",
+        "from_name":  "Golden Customer",
+        "subject":  "Delivery complaint",
+        "body":  "Why is delivery late? I demand compensation.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g064",
+        "category":  "low-confidence",
+        "from_name":  "Golden Customer",
+        "subject":  "Unclear request",
+        "body":  "Can you do it for me?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Must be escalated by guardrails or low confidence."
+    },
+    {
+        "id":  "g065",
+        "category":  "edited-faq-trap",
+        "from_name":  "Golden Customer",
+        "subject":  "Return window",
+        "body":  "What is the return window for an item?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Edited FAQ content is not available until it is approved again.",
+        "lifecycle_faq":  {
+            "question":  "What is the return window for an item?",
+            "answer":  "Edited answer awaiting approval.",
+            "status":  "draft"
+        }
+    },
+    {
+        "id":  "g066",
+        "category":  "edited-faq-trap",
+        "from_name":  "Golden Customer",
+        "subject":  "Recipient details",
+        "body":  "Can I change the recipient name on a parcel?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "A changed FAQ must not be used while it is in draft status.",
+        "lifecycle_faq":  {
+            "question":  "Can I change the recipient name on a parcel?",
+            "answer":  "Edited recipient answer awaiting approval.",
+            "status":  "draft"
+        }
+    },
+    {
+        "id":  "g067",
+        "category":  "inactive-faq-trap",
+        "from_name":  "Golden Customer",
+        "subject":  "Cancellation policy",
+        "body":  "Please explain the cancellation policy for my purchase.",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Inactive FAQ content must not be used for matching.",
+        "lifecycle_faq":  {
+            "question":  "Please explain the cancellation policy for my purchase.",
+            "answer":  "Inactive cancellation answer.",
+            "status":  "inactive"
+        }
+    },
+    {
+        "id":  "g068",
+        "category":  "inactive-faq-trap",
+        "from_name":  "Golden Customer",
+        "subject":  "Warranty coverage",
+        "body":  "Does the product warranty cover accidental damage?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "An inactive FAQ remains unavailable to the reply pipeline.",
+        "lifecycle_faq":  {
+            "question":  "Does the product warranty cover accidental damage?",
+            "answer":  "Inactive warranty answer.",
+            "status":  "inactive"
+        }
+    },
+    {
+        "id":  "g069",
+        "category":  "unapproved-faq-trap",
+        "from_name":  "Golden Customer",
+        "subject":  "Gift wrapping",
+        "body":  "Do you offer gift wrapping for orders?",
+        "expected":  "escalate",
+        "expected_faq_id":  null,
+        "notes":  "Unapproved FAQ content must never become a draft source.",
+        "lifecycle_faq":  {
+            "question":  "Do you offer gift wrapping for orders?",
+            "answer":  "Unapproved gift wrapping answer.",
+            "status":  "draft"
+        }
+    }
 ]

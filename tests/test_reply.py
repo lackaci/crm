@@ -8,7 +8,7 @@ import pytest
 from app.db.database import initialize_database, open_database
 from app.db.drafts import list_drafts
 from app.db.emails import EmailRecord
-from app.db.faqs import FAQEntry, create_faq
+from app.db.faqs import FAQEntry, add_faq, create_faq
 from app.reply.matcher import DEFAULT_THRESHOLD, find_best_faq
 from app.reply.pipeline import process_email
 from app.providers.llm_fake import FakeLLMProvider
@@ -36,7 +36,7 @@ def test_sample_wording_is_calibrated_without_matching_unrelated_text() -> None:
     email_data = json.loads((root / "sample_data" / "emails.json").read_text())
     faq_data = json.loads((root / "sample_data" / "faqs.json").read_text())
     faqs = [
-        FAQEntry(item["id"], item["question"], item["answer"], True, "")
+        FAQEntry(item["id"], item["question"], item["answer"], True, "", "approved")
         for item in faq_data
     ]
     provider = FakeLLMProvider()
@@ -158,6 +158,46 @@ def test_unapproved_faq_is_not_used(tmp_path: Path) -> None:
     path = _database(tmp_path / "reply.db", approved=False)
     result = process_email(_email("Opening hours", "When are you open?"),
                            path, FakeLLMProvider())
+    assert result.status == "escalated"
+    assert list_drafts(path) == []
+
+
+@pytest.mark.parametrize("status", ["draft", "inactive"])
+def test_non_approved_best_match_is_never_used(status: str) -> None:
+    """Matcher filtering protects callers that do not use the DB loader."""
+    email = _email("Shipping time", "How long does shipping take?")
+    faqs = [
+        FAQEntry(1, "Shipping time", "Unapproved answer", False, "", status),
+        FAQEntry(2, "Opening hours", "Approved answer", True, "", "approved"),
+    ]
+
+    result = find_best_faq(email, faqs, FakeLLMProvider())
+
+    assert result.faq is None or result.faq.status == "approved"
+    assert result.faq is not faqs[0]
+
+
+@pytest.mark.parametrize("status", ["draft", "inactive"])
+def test_pipeline_does_not_use_non_approved_best_match(
+    tmp_path: Path, status: str
+) -> None:
+    path = tmp_path / "reply.db"
+    initialize_database(path)
+    add_faq(path, "Shipping time", "Unapproved answer", status=status)
+    create_faq(path, "Opening hours", "Approved answer", approved=True)
+    with open_database(path) as connection:
+        connection.execute(
+            "INSERT INTO emails (id, from_name, from_email, subject, body) "
+            "VALUES (1, 'Ada', 'a@example.com', 'Shipping time', "
+            "'How long does shipping take?')"
+        )
+
+    result = process_email(
+        _email("Shipping time", "How long does shipping take?"),
+        path,
+        FakeLLMProvider(),
+    )
+
     assert result.status == "escalated"
     assert list_drafts(path) == []
 

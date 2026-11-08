@@ -1,0 +1,226 @@
+MINI CRM - FIVE-MINUTE GMAIL AND AI REPLY PLAN
+Prepared: 8 November 2026
+Status: implemented in the desktop app; see docs/EMAIL_WORKFLOW.md for setup,
+behavior, automated verification and the remaining live-account checklist.
+
+1. THE FINISHED EXPERIENCE
+
+Gmail check every 5 minutes -> import new emails -> prepare AI suggestions ->
+you review/edit -> you approve a reply -> you click Send reply.
+
+Automatic work ends at preparing the suggestion. Your approval is attached to
+that reply's exact content, recipient and sending account. Sending always waits
+for your button click. This becomes the normal, recommended email workflow;
+the separate test app's session-approved auto-send mode is not part of it.
+
+The first release checks Gmail while the desktop app is open, including when
+minimized. Show this clearly in the interface. A later Windows background task
+can provide checking while the app is closed; do not imply it already exists.
+
+2. ONE LOGICAL SETUP PAGE
+
+Reuse the useful parts of Test setup for the regular desktop application.
+Keep the normal workspace and test workspace separate during implementation.
+Do not change backend/ or migrate desktop records to the server API.
+
+Section A - Gmail
+- Gmail address, Google OAuth client file, Connect / reconnect.
+- Import sender restrictions, first-import lookback and batch limit.
+- Read-only importing works before sending permission is enabled.
+- A separate Enable sending control requests Google's required permission once.
+- Show Connected / Needs reconnect / Paused and the active import scope.
+
+Section B - AI replies
+- Provider: Vercel AI Gateway.
+- Reply model: nvidia/nemotron-3.5-lightning-free.
+- API key: masked field with OS-keyring storage, or AI_GATEWAY_API_KEY in .env.
+- Test AI connection using a fixed fictional prompt, with a visible result.
+- Automatic reply suggestions on/off and a Free model only setting.
+- Keep the document/vision model separate; this email model must not replace
+  the existing invoice/contract extraction model globally.
+
+Section C - Workflow
+- Check Gmail every 5 minutes: 300 seconds, presented in minutes.
+- Prepare suggestions automatically: on for this workflow.
+- Start / Pause workflow and Check Gmail now.
+- Show whether the app must remain open and offer keeping it minimized.
+- Preserve saved data and settings. Enabling this new five-minute workflow
+  applies the selected interval explicitly rather than silently rewriting
+  unrelated automation rules.
+
+Show a clear setup summary before starting:
+Gmail connected | AI connection tested | Every 5 minutes | Sending permission
+ready or not enabled | Human approval required.
+
+3. THE INTERFACE DURING EVERYDAY USE
+
+Use Setup, Inbox and Replies as the primary email screens. Keep customers,
+documents and technical tools available without putting them in the main flow.
+
+Inbox header example:
+  Gmail connected | Last check 10:30 | Next check 10:35 | AI ready
+  [Check Gmail now] [Pause]
+  Last result: 7 new messages, 5 existing, 0 failed
+
+Reply screen example:
+  [Incoming email and customer] | [Editable AI suggestion and source facts]
+  [Regenerate] [Save changes] [Approve reply] [Send reply]
+
+- New imports appear automatically, newest first, without hunting through menus.
+- Show New, Preparing, Ready for review, Approved, Sent and Needs attention.
+- Give Ready for review a visible count; selecting a draft opens it directly.
+- Keep existing sender/subject/body search and message filters.
+- Sending controls stay visible with a useful reason when disabled.
+- Display errors beside the relevant action and keep the last outcome visible.
+- Distinguish fictional examples from imported Gmail messages.
+- A zero-new import explicitly says no new matching mail was found and shows
+  the sender/date scope. Manual checking clears filters hiding the results;
+  scheduled checks preserve the current view.
+
+4. RELIABLE FIVE-MINUTE IMPORT
+
+Reuse the existing incremental Gmail service, history cursor, persisted queue,
+mailbox identity checks and per-message commits.
+
+- Check once when the enabled workflow starts, then every 300 seconds.
+- Manual checking uses the same path and does not create a second simultaneous
+  import. Use a database-backed lease if two desktop instances are running.
+- On resume from sleep, perform one overdue check; avoid a burst of old ticks.
+- Skip existing Gmail IDs before downloading messages or attachments.
+- Retain capped backlogs and retryable failed messages across restarts.
+- An expired history ID rechecks the selected lookback without deleting data.
+- One failed message cannot roll back successful imports.
+- Display connection, discovery and download progress, followed by final counts.
+- Authentication errors offer Reconnect; network/quota errors offer a readable
+  next action and bounded read retries. Never open sign-in from a timer.
+
+After committing new messages, enqueue AI work immediately. Gmail imports
+continue even if the AI provider is unavailable.
+
+5. VERCEL FREE MODEL CHOICE
+
+Choice checked against official Vercel information on 8 November 2026:
+
+  Provider: Vercel AI Gateway
+  Model ID: nvidia/nemotron-3.5-lightning-free
+  API endpoint: https://ai-gateway.vercel.sh/v1/chat/completions
+  API-key environment variable: AI_GATEWAY_API_KEY
+
+The selected model is NVIDIA Nemotron 3.5 Lightning Free. Vercel lists support
+for structured outputs and Chat Completions. NVIDIA logs prompts and responses
+for model improvement. This endpoint is restricted to non-sensitive trial use;
+do not upload personal/confidential data or use it for production/business-
+critical systems. Partial masking does not remove these restrictions.
+Free availability is not guaranteed permanently. No paid fallback is selected.
+
+Integration rules:
+- Keep the explicit -free model ID. Do not silently fall back to a paid model.
+- Validate availability and structured output with a fictional setup test.
+- Show the selected model and availability in Setup.
+- If the free endpoint expires, is rate-limited or becomes unavailable, pause
+  AI generation with a clear message. Keep importing Gmail and allow manual
+  replies; require an explicit choice before changing models.
+- Check current provider terms and retention information before live mail use.
+  Keep masking supported sensitive patterns; do not describe it as complete
+  anonymization or promise zero retention.
+- Use local SQLite full-text/lexical retrieval over approved answers initially.
+  Do not call the currently paid embedding endpoint in a free-only workflow.
+  No local neural model or powerful computer is needed for this retrieval.
+- Do not route scanned invoices or images to this text-reply configuration.
+
+Official sources:
+https://vercel.com/ai-gateway/models/nemotron-3.5-lightning-free
+https://vercel.com/docs/ai-gateway/pricing
+
+6. AI SUGGESTIONS THAT DO NOT BECOME A DEAD END
+
+Create a durable draft-generation queue with one active job per message/source
+version. Save queued, generating, ready, failed and needs-information outcomes.
+Resume unfinished work after restart, without duplicating pending replies.
+
+Build context from the incoming message, linked customer, approved saved answers
+and relevant conversation context. Treat email text as untrusted input, not as
+instructions to operate Gmail or change application rules.
+
+Generate a concise suggested reply grounded in that context. Show its supporting
+answer/facts alongside the draft. The current provider only copies a selected
+approved answer; improve this carefully so assistance can adapt phrasing without
+inventing business facts, prices, commitments or policies.
+
+If information is missing, offer a clearly labeled clarification draft or a
+manual reply editor. Never require the user to create an FAQ just to type a
+manual response. Risky messages remain clearly flagged for personal review.
+
+Automatically link a sender only when their address uniquely matches an existing
+customer. Otherwise keep the message visible and let the user link it directly.
+Do not silently invent customer records.
+
+Once a user edits or approves a suggestion, background work must not overwrite
+it. Regeneration is explicit and invalidates approval for the older version.
+
+7. APPROVE FIRST, SEND WITH ONE BUTTON
+
+Add a persistent local approval record tied to the exact content hash, recipient,
+subject, sending account and draft version. Use an additive SQLite migration;
+keep existing records and durable outbox history.
+
+Approve reply:
+- Save the visible edit and approve that version.
+- Show Approved, including the recipient/account, and enable Send reply when
+  the Gmail permission and allowed-recipient checks pass.
+- Editing or regenerating content, or changing the recipient/account, revokes
+  approval and disables Send until the new version is approved.
+
+Send reply:
+- Runs only from the user's click; neither the timer nor AI can call it.
+- Recheck current approval and content, then use a background delivery worker.
+- Create the Gmail draft internally if needed and send through the existing
+  durable outbox. Remove the separate manual Create Gmail draft step from the
+  ordinary reply workflow.
+- Do not require another content-approval dialog after an already valid approval
+  and explicit Send click. Required Google OAuth consent remains a setup step.
+- Disable duplicate clicks. Mark Sent only after Gmail confirms acceptance.
+- Preserve reply threading and exact approved text.
+- For an uncertain result, show Check Gmail status and never automatically retry
+  a send. Reopening the app or re-approving must not bypass that lock.
+
+Pending and approved-to-send are different from actually sent. Do not mark a
+reply delivered merely because the user approved it.
+
+8. IMPLEMENTATION ORDER AND COMPLETION CHECKS
+
+Stage 1 - Consolidate Setup and connection checks.
+Complete when Gmail, Vercel and the five-minute workflow can be configured in
+one place, with visible import restrictions and no plaintext keys in SQLite/logs.
+
+Stage 2 - Schedule import and durable AI work.
+Complete when a new test email is imported and receives a suggestion after
+the next five-minute check, with responsive UI and no duplicate jobs.
+
+Stage 3 - Reply review, approval and one-button sending.
+Complete when Approve enables Send, edits disable it again, and one Send click
+creates/sends the approved reply without a separate Gmail-draft action.
+
+Stage 4 - Free-model behavior and failure recovery.
+Complete when free-endpoint failure leaves Gmail imports running, does not
+select a paid fallback, and gives a useful manual-reply path.
+
+Stage 5 - Finish the interface and validate end to end.
+Complete when the normal app opens into this flow, the separate test workspace
+can demonstrate it with fictional data, and the short setup guide matches the UI.
+
+Tests must cover:
+- 300-second scheduling, manual checks, sleep/resume and overlapping instances.
+- Incremental import, duplicates, partial failures and scoped zero-new results.
+- AI queue restart/retry, unavailable free model and no paid embeddings/fallback.
+- Preserving edits; approval invalidation after any relevant content change.
+- Sending blocked before approval and impossible from automatic scan/generation.
+- One successful send despite double clicks, crashes or uncertain outcomes.
+- GUI mouse clicks through Setup -> Inbox -> Review -> Approve -> Send.
+- Existing customers, documents, Excel export and offline demo behavior.
+
+Run the full suite, then perform an explicit test with two test Gmail accounts:
+send a harmless question, wait for automatic import/drafting, approve it, click
+Send, and verify exactly one reply in Gmail. Test real customer content only
+after provider/data settings are understood. No live tests have been performed
+as part of writing this plan.

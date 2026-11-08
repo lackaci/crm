@@ -1,10 +1,10 @@
 """The one application entry point for creating a safe pending draft."""
 
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Callable
 
-from app.db.drafts import create_draft_reply
+from app.db.drafts import create_draft_reply, get_draft
 from app.db.faqs import FAQEntry, list_approved_faqs
 from app.providers.llm_base import LLMProvider
 from app.providers.llm_masked import MaskedLLMProvider
@@ -24,12 +24,12 @@ class DraftResult:
     body: str | None = None
 
 
-def process_email(
+def prepare_reply(
     email: object, database_path: Path, llm: LLMProvider, threshold: float | None = None,
     audit_callback: Callable[[dict], None] | None = None,
     audit_database_path: Path | None = None,
 ) -> DraftResult:
-    """Guard, match approved FAQs, validate the rewrite, and store no escalation."""
+    """Guard, match approved FAQs and validate a suggestion without saving it."""
     escalation = check_escalation(email)
     if escalation:
         return DraftResult("escalated", reason=escalation.reason)
@@ -70,5 +70,18 @@ def process_email(
     email_id = getattr(email, "id", None)
     if email_id is None:
         return DraftResult("escalated", "email has no database id", faq=match.faq, match=match)
-    draft_id = create_draft_reply(database_path, int(email_id), result.reply, faq_id=result.faq_id)
-    return DraftResult("pending", draft_id=draft_id, faq=match.faq, match=match, body=result.reply)
+    return DraftResult("pending", faq=match.faq, match=match, body=result.reply)
+
+
+def process_email(
+    email: object, database_path: Path, llm: LLMProvider, threshold: float | None = None,
+    audit_callback: Callable[[dict], None] | None = None,
+    audit_database_path: Path | None = None,
+) -> DraftResult:
+    """Prepare and save a pending reply; never send or create a Gmail draft."""
+    result = prepare_reply(email, database_path, llm, threshold, audit_callback, audit_database_path)
+    if result.status != "pending":
+        return result
+    draft_id = create_draft_reply(database_path, int(getattr(email, "id")), result.body, faq_id=result.faq.id,
+        faq_snapshot=result.faq, reuse_pending=True)
+    return replace(result, draft_id=draft_id, body=get_draft(database_path, draft_id).body)

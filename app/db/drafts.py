@@ -28,6 +28,7 @@ def create_draft_reply(
     body: str,
     faq_id: int | None = None,
     actor: str = "reply-pipeline",
+    *, faq_snapshot=None, reuse_pending=False,
 ) -> int:
     """Store a pending draft, optionally using an approved FAQ."""
     body = body.strip()
@@ -35,14 +36,24 @@ def create_draft_reply(
         raise ValueError("Draft body is required.")
 
     with open_database(database_path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
         if faq_id is not None:
             faq = connection.execute(
-                "SELECT approved FROM faq_entries WHERE id = ?", (faq_id,)
+                "SELECT status,question,answer FROM faq_entries WHERE id = ?", (faq_id,)
             ).fetchone()
             if faq is None:
                 raise ValueError("FAQ was not found.")
-            if not bool(faq["approved"]):
+            if faq["status"] != "approved":
                 raise ValueError("Only approved FAQs can be linked to a draft.")
+            if faq_snapshot is not None and (faq["question"] != faq_snapshot.question or faq["answer"] != faq_snapshot.answer):
+                raise ValueError("The saved answer changed while preparing this reply. Prepare it again.")
+        if reuse_pending:
+            existing = connection.execute("SELECT id FROM draft_replies WHERE email_id=? AND status='pending' ORDER BY id DESC LIMIT 1", (email_id,)).fetchone()
+            if existing:
+                return existing["id"]
+            source = connection.execute("SELECT status FROM emails WHERE id=?", (email_id,)).fetchone()
+            if not source or source["status"] == "done":
+                raise ValueError("The message is already completed or no longer exists.")
 
         cursor = connection.execute(
             """

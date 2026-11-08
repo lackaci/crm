@@ -68,38 +68,46 @@ def import_emails(
     imported = 0
     records = provider.fetch_new_emails()
     with open_database(database_path) as connection:
+        connection.execute("BEGIN IMMEDIATE")
         for raw_record in records:
             if not isinstance(raw_record, dict):
                 raise ValueError("Email provider records must be mappings.")
             provider = str(raw_record.get("provider", "mock"))
             remote_message_id = raw_record.get("remote_message_id")
+            source_mailbox = str(raw_record.get("source_mailbox") or "").strip().lower() or None
             external_id = _external_id(raw_record)
             if external_id is None and remote_message_id:
                 external_id = str(remote_message_id)
             if external_id is not None:
                 existing = connection.execute(
-                    "SELECT 1 FROM emails WHERE "
-                    "(provider = ? AND remote_message_id = ?) OR "
-                    "(provider = ? AND external_id = ?) LIMIT 1",
-                    (provider, str(remote_message_id) if remote_message_id else None,
-                     provider, external_id),
+                    "SELECT 1 FROM emails WHERE provider=? AND COALESCE(source_mailbox,'')=? AND "
+                    "(remote_message_id=? OR external_id=?) LIMIT 1",
+                    (provider, source_mailbox or "", str(remote_message_id) if remote_message_id else None, external_id),
                 ).fetchone()
                 if existing is not None:
                     continue
+                if source_mailbox and provider == "gmail":
+                    legacy = connection.execute("SELECT id FROM emails WHERE provider='gmail' AND source_mailbox IS NULL "
+                        "AND remote_message_id=? AND lower(from_email)=lower(?) AND subject=? AND body=?",
+                        (remote_message_id, _text(raw_record,"from_email"), _text(raw_record,"subject"), _text(raw_record,"body"))).fetchone()
+                    if legacy:
+                        connection.execute("UPDATE emails SET source_mailbox=? WHERE id=?", (source_mailbox,legacy["id"]))
+                        _log_action(connection, actor, "gmail_mailbox_verified", f"email_id={legacy['id']}")
+                        continue
 
             from_email = _text(raw_record, "from_email")
-            customer = connection.execute(
-                "SELECT id FROM customers WHERE lower(email) = lower(?) LIMIT 1",
+            matches = connection.execute(
+                "SELECT id FROM customers WHERE lower(email) = lower(?)",
                 (from_email,),
-            ).fetchone()
-            customer_id = int(customer["id"]) if customer is not None else None
+            ).fetchall()
+            customer_id = int(matches[0]["id"]) if len(matches) == 1 else None
             cursor = connection.execute(
                 """
                 INSERT INTO emails
                     (customer_id, external_id, provider, remote_message_id,
                      remote_thread_id, labels, from_name, from_email,
-                     subject, body, received_at)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     subject, body, received_at, source_mailbox, received_ts, needs_attention, attention_reason)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     customer_id,
@@ -114,6 +122,10 @@ def import_emails(
                     _text(raw_record, "subject"),
                     _text(raw_record, "body"),
                     raw_record.get("received_at"),
+                    source_mailbox,
+                    _received_timestamp(raw_record.get("received_at")),
+                    bool(_attention_reason(raw_record.get("subject", ""), raw_record.get("body", ""))),
+                    _attention_reason(raw_record.get("subject", ""), raw_record.get("body", "")),
                 ),
             )
             _log_action(
@@ -128,6 +140,9 @@ def import_emails(
                 raw_record.get("attachments", []), storage_root,
             )
     return imported
+
+
+from .inbox import received_timestamp as _received_timestamp, attention_reason as _attention_reason
 
 
 def _log_action(connection: Any, actor: str, action: str, details: str) -> None:

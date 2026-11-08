@@ -10,7 +10,15 @@ from app.db.drafts import (
     set_draft_status,
 )
 from app.db.emails import import_emails
-from app.db.faqs import create_faq, list_approved_faqs
+from app.db.faqs import (
+    add_faq,
+    approve_faq,
+    create_faq,
+    deactivate_faq,
+    list_approved_faqs,
+    list_faqs,
+    update_faq,
+)
 from app.providers.email_mock import MockEmailProvider
 
 
@@ -91,3 +99,85 @@ def test_status_update_validates_status_and_audits(database_path):
         ).fetchone()
     assert audit["actor"] == "reviewer"
     assert "status=approved" in audit["details"]
+
+
+def test_faq_lifecycle_audits_and_edit_requires_reapproval(database_path):
+    faq_id = add_faq(database_path, "Question", "Answer", actor="owner")
+
+    assert list_faqs(database_path, status="draft")[0].status == "draft"
+    update_faq(database_path, faq_id, "Edited question", "Edited answer", actor="owner")
+    approve_faq(database_path, faq_id, actor="owner")
+    deactivate_faq(database_path, faq_id, actor="owner")
+
+    assert list_approved_faqs(database_path) == []
+    assert list_faqs(database_path, status="inactive")[0].approved is False
+    with open_database(database_path) as connection:
+        actions = [
+            row["action"]
+            for row in connection.execute(
+                "SELECT action FROM audit_log ORDER BY id"
+            ).fetchall()
+        ]
+    assert actions[-4:] == [
+        "faq_created",
+        "faq_updated",
+        "faq_approved",
+        "faq_deactivated",
+    ]
+
+
+def test_approved_faq_edit_clears_approval_until_reapproved(database_path):
+    faq_id = add_faq(
+        database_path, "Original question", "Original answer", approved=True,
+        actor="reviewer",
+    )
+    initial = list_faqs(database_path)[0]
+    assert initial.status == "approved"
+    assert initial.approved_at is not None
+
+    update_faq(
+        database_path, faq_id, "Edited question", "Edited answer",
+        actor="reviewer",
+    )
+    edited = list_faqs(database_path)[0]
+    assert edited.status == "draft"
+    assert edited.approved is False
+    assert edited.approved_at is None
+
+    approve_faq(database_path, faq_id, actor="reviewer")
+    approved_again = list_faqs(database_path)[0]
+    assert approved_again.status == "approved"
+    assert approved_again.approved is True
+    assert approved_again.approved_at is not None
+
+    with open_database(database_path) as connection:
+        actions = [
+            row["action"]
+            for row in connection.execute(
+                "SELECT action FROM audit_log WHERE actor = ? ORDER BY id",
+                ("reviewer",),
+            ).fetchall()
+        ]
+    assert actions == ["faq_created", "faq_updated", "faq_approved"]
+
+
+def test_legacy_faqs_are_migrated_to_approved(database_path, tmp_path):
+    # Recreate the legacy shape in a separate file to exercise startup migration.
+    legacy = tmp_path / "legacy-faq.db"
+    with open_database(legacy) as connection:
+        connection.execute(
+            "CREATE TABLE faq_entries ("
+            "id INTEGER PRIMARY KEY, question TEXT NOT NULL, answer TEXT NOT NULL, "
+            "approved INTEGER NOT NULL DEFAULT 0, "
+            "created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP)"
+        )
+        connection.execute(
+            "INSERT INTO faq_entries (question, answer, approved) VALUES (?, ?, ?)",
+            ("Old question", "Old answer", 0),
+        )
+    initialize_database(legacy)
+
+    faq = list_faqs(legacy)[0]
+    assert faq.status == "approved"
+    assert faq.approved_at is not None
+    assert list_approved_faqs(legacy)[0].id == faq.id

@@ -1,6 +1,14 @@
 .venv/
 .env
+.backend.env
 *.db
+*.sqlite*
+/customer_files/
+token.json
+tokens/
+credentials*.json
+client_secret*.json
+oauth*.json
 __pycache__/
 *.py[cod]
 .pytest_cache/
@@ -8,3 +16,6 @@ __pycache__/
 /credentials.json
 /token.json
 /.google-oauth/
+/exports/
+/test_workspace/
+~$*.xlsx

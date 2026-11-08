@@ -72,11 +72,15 @@ class AppConfig:
     gmail_allowed_senders: tuple[str, ...] = ()
     gmail_max_messages: int = 100
     gmail_newer_than_days: int | None = 30
+    gmail_write_enabled: bool = False
+    enable_sending: bool = False
+    send_allowlist: tuple[str, ...] = ()
 
     @property
     def sending_enabled(self) -> bool:
-        """Sending remains disabled for every mode during M08."""
-        return False
+        return (self.mode is RunMode.LIVE and self.provider == "gmail"
+                and self.gmail_write_enabled and self.enable_sending
+                and bool(self.test_mailbox) and bool(self.send_allowlist))
 
 
 def load_config(values: Mapping[str, str] | None = None) -> AppConfig:
@@ -210,4 +214,7 @@ def load_config(values: Mapping[str, str] | None = None) -> AppConfig:
         gmail_allowed_senders=allowed_senders,
         gmail_max_messages=max_messages,
         gmail_newer_than_days=newer_than_days,
+        gmail_write_enabled=source.get("MINI_CRM_GMAIL_WRITE_ENABLED", "false").lower() == "true",
+        enable_sending=source.get("MINI_CRM_ENABLE_SENDING", "false").lower() == "true",
+        send_allowlist=tuple(address.strip().lower() for address in source.get("MINI_CRM_SEND_ALLOWLIST", mailbox).split(",") if address.strip()),
     )

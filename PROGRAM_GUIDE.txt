@@ -1,0 +1,396 @@
+MINI CRM - SETUP, FEATURES AND EVERYDAY USE
+=========================================
+Guide updated: 8 November 2026
+
+1. WHAT THE PROGRAM DOES
+
+Mini CRM organizes customer details, emails, saved answers and customer files.
+It helps prepare replies, assign incoming work, read business documents and
+combine important document data into one Excel workbook.
+
+The repository contains two separate applications:
+- Desktop CRM: the Windows app opened with the .cmd launchers. It saves data
+  in SQLite and provides the Gmail, reply, automation and Excel screens.
+- Server backend: a separate API for one business with multiple staff accounts,
+  PostgreSQL and vector search. The desktop is not connected to this API yet.
+  Their databases and staff settings are separate.
+
+2. FIRST-TIME DESKTOP SETUP
+
+Install Python 3.11, then open PowerShell in the project folder and run:
+
+    python -m venv .venv
+    .venv\Scripts\python.exe -m pip install -r requirements.txt
+
+If .venv already exists, only run the dependency-install command.
+VS Code is optional; you do not need Copilot to use the CRM.
+
+Launchers:
+- Open CRM.cmd: recommended for the five-minute Gmail / AI / review workflow.
+  Open Setup: Gmail and AI to configure the account, model and schedule together.
+  Changes are kept between launches.
+- Start Test.cmd: the advanced session-workflow test app. It opens Test setup,
+  where AI, Gmail, test emails and workflow approval are all configured together.
+  Its data is separate and persistent under test_workspace/. It starts offline.
+- Start Demo.cmd: opens a temporary offline demonstration with fictional
+  customers, emails, saved answers and documents. Changes disappear on closing.
+- Start Document Model.cmd: starts/downloads the optional local document model.
+  You do not need this launcher when using online AI.
+
+To see startup errors in a terminal, use:
+
+    .venv\Scripts\python.exe -m app.main
+
+RECOMMENDED EMAIL WORKFLOW
+
+Open CRM.cmd -> Setup: Gmail and AI.
+1) Connect Gmail using your address and Desktop OAuth client JSON outside the
+   project. Leave sending off to test read-only imports first.
+2) Save email AI with nvidia/nemotron-3.5-lightning-free and Free model only checked. Put
+   your Vercel AI Gateway key in the masked field, or AI_GATEWAY_API_KEY in .env.
+3) Click Test AI connection, then Start 5-minute checks. The first check starts
+   immediately. Checks continue every 300 seconds while the app is open/minimized.
+4) Incoming mail is imported and AI jobs prepare suggestions in the background.
+   Open Review replies, read the sources, edit, then click Approve reply.
+5) Enable Gmail sending permission and allowed recipients in Setup if needed,
+   reconnect, approve the current reply and click Send reply. Gmail draft creation
+   happens internally. The timer and AI never send anything.
+
+Approval saves the visible text and is bound to its recipient and account. Edits,
+regeneration and relevant source/account changes remove approval. An uncertain
+send stays locked: use Check Gmail status; do not try another send.
+Write reply / review existing opens a manual editor even without saved answers
+or a linked customer. Missing facts and risky messages get a clarification for
+personal review. Existing edits are never replaced by background drafting.
+
+Nemotron Free is restricted to non-sensitive trial use. NVIDIA logs prompts and
+outputs; do not use personal/confidential customer data or production mail with
+this endpoint. After switching from Beam, restart and Test AI connection in
+Setup; existing replies and Gmail settings are preserved. If unavailable, AI pauses
+without a paid fallback; Gmail importing and manual replies keep working. Fix
+the setting and Test AI connection to resume. Email matching uses local lexical
+retrieval, without paid embeddings. The document model below stays independent.
+Full setup and a manual test checklist: docs/EMAIL_WORKFLOW.md.
+
+SIMPLER TEST VERSION
+
+Start Test.cmd -> Test setup. Use the AI, Gmail, Test emails and Workflow jump
+buttons. Start with Offline simulation checked and click Approve and simulate
+workflow. You can inspect generated replies and results on the same setup page.
+Add another sample email to repeat the exercise with fresh data.
+
+For online testing, turn off Offline simulation and save your AI settings here.
+You can use online AI with sample emails in Prepare replies only mode before
+connecting Gmail. To try Gmail, connect your account in this same setup page,
+choose import restrictions, enable the desired Gmail permissions and specify
+allowed recipients for sending. Add the test sender as a customer or link them.
+
+Choose Prepare replies only, Create Gmail drafts, or Prepare and send replies.
+Approving the workflow authorizes all eligible messages within the shown
+account, recipient list and message budget for this session. You do not approve
+each message separately in this test version. Stop, closing the app or changing
+settings revokes approval. Optional repeating runs stop when the app closes.
+Uncertain Gmail sends remain locked against retries, even after a new approval.
+
+The regular CRM uses per-message Approve reply followed by Send reply. This
+separate test app retains its advanced session approval. Full test-app setup:
+docs/TEST_APP.md. Its launch command is:
+
+    .venv\Scripts\python.exe -m app.test_main
+
+3. SET UP VERCEL ONLINE AI
+
+Use Setup: Gmail and AI for the independent free email reply model described
+above. The settings in this section are for document/vision extraction and the
+legacy FAQ integration, which can incur charges separately.
+For document reading, use Vercel AI Gateway.
+No local model, Docker or GPU is needed for these desktop online features.
+
+In the project's .env file, add:
+
+    AI_GATEWAY_API_KEY=your_vercel_ai_gateway_key
+
+Use an AI Gateway key, not a general Vercel account access token. Keep the real
+key private. Restart the CRM after changing .env.
+
+Then, in Open CRM.cmd:
+1) Open Files -> Excel register (all customers).
+2) Choose Online - Vercel AI Gateway.
+3) Keep the preset model, or choose another suitable gateway model:
+     Document vision model: openai/gpt-5.4-mini
+     Legacy FAQ embedding model (not used by the new flow): openai/text-embedding-3-small
+     Endpoint: https://ai-gateway.vercel.sh/v1/chat/completions
+4) Leave the legacy FAQ/reply checkbox off when using the new email workflow.
+5) Click Save settings.
+
+Instead of using .env, you can paste the key into the app's masked API key field.
+The app saves it in the OS keyring. A saved key for the same configuration takes
+precedence over the environment variable. Key values are not stored in SQLite.
+
+Online document reading sends document text and/or page images through Vercel
+to the selected model provider. Reply suggestions mask supported patterns, such
+as email addresses, before model calls; this does not remove every personal detail.
+API calls may cost money. AI settings and Gmail settings are independent.
+Start Demo.cmd always uses offline simulations, even if you configured a key.
+
+Other choices are direct OpenAI, a compatible online API, or optional local
+Ollama document reading. See docs/ONLINE_AI.md for provider details.
+
+4. THE MAIN SCREENS
+
+The main menu shows Inbox, Review replies, Setup and Replied. Click More tools to reveal
+Customers, Saved answers, Files and advanced Automation.
+
+Replied:
+- Successfully sent replies move here automatically and disappear from Inbox.
+- Read the original email and exact sent response; search and browse history.
+- Earlier confirmed sends appear too. Nothing is deleted, and history survives
+  restarting. Approved/unsent drafts and uncertain sends remain active.
+
+Inbox:
+- Import from Gmail: a visible button that opens connection setup if needed,
+  then starts importing automatically. Later clicks import only new mail.
+- Imports run in the background with progress and new/existing/failed counts.
+- The Inbox shows your sender restriction, lookback days and batch limit.
+  Use Change import options to adjust them. Leave Import senders empty to
+  include all senders, then Connect / reconnect Gmail to apply and import.
+- Read incoming mail across all customers, newest first, beside a reading pane.
+- Filter All, Unread, Needs assignment, Needs attention or Reply pending.
+- See counts, arrival dates, previews, linked customers and staff assignments.
+- Search sender, subject and body across stored mail; browse 100 results per page.
+- Open a message to mark it read locally; Gmail labels are left unchanged.
+- Link unknown senders directly to a customer from the reading pane.
+- Prepare a reply using approved saved answers.
+  Progress/errors appear beside the button. The new flow offers a clarification
+  for missing knowledge and a Write reply editor. Successful manual preparation
+  opens Review replies immediately; background preparation preserves your view.
+
+Customers:
+- Add, search and update names, email addresses, phone numbers and notes.
+- Select a customer to see their messages and files elsewhere in the app.
+
+Review replies:
+- Read the original message alongside the suggested reply.
+- Edit, save, copy or discard a reply.
+- With Gmail configured, create a Gmail draft and approve sending.
+
+Saved answers:
+- Add and edit FAQs, approve answers and deactivate outdated answers.
+- Try a sample message to see whether an answer matches.
+- Edited answers need approval again before supplying new replies.
+
+Files:
+- Store and open customer files under Stored files.
+- Read registered documents and export the shared Excel register.
+- Review and correct extracted information against the source document.
+
+Setup:
+- Configure email AI, test Vercel, connect Gmail and choose import restrictions.
+- Start/Pause five-minute checks or Check Gmail now; inspect last/next check.
+- Enable reviewed sending, choose recipients or pause all mail activity.
+
+Automation:
+- Configure email categories, priorities and staff assignment rules.
+- Process imported messages, schedule Gmail checks and inspect action history.
+
+5. HOW REPLY SUGGESTIONS WORK
+
+New email -> incremental Gmail import -> durable AI queue -> local approved-FAQ
+retrieval -> proposed wording/clarification -> human edit -> Approve -> Send.
+
+The new workflow can adapt wording using approved facts. The source facts and
+review warning appear alongside the editor. Unsupported numeric/link facts are
+rejected in favor of a clarification. This does not guarantee factual accuracy.
+The next paragraph describes the older FAQ-copy integration only.
+
+When online suggestions are enabled, embeddings help compare the message with
+approved FAQs. The completion model must return the selected approved answer;
+it is not a general assistant that freely invents business policies or promises.
+You can edit a pending reply during review.
+
+Risky or unclear messages, including refund requests, complaints and money
+questions, require attention. Low-confidence matches do not get an automatic
+answer. Existing pending replies are reused rather than duplicated.
+
+Preparing or approving a reply does not send it. The regular CRM requires Gmail
+permission, an allowed recipient, current approval and an explicit Send click.
+
+6. CONNECT GMAIL
+
+1) In Google Cloud, enable Gmail API and create a Desktop app OAuth client.
+   Configure the consent screen; add your Gmail account as a test user when
+   the Google application is in testing mode.
+2) Download the OAuth client JSON to a private location outside the repository.
+3) Open CRM -> Inbox -> Import from Gmail. Enter the Gmail address and select
+   the JSON in the connection screen that opens.
+4) Leave draft/send permissions off for read-only importing. Connect and
+   complete Google sign-in.
+5) After connecting from the import button, Inbox opens and imports automatically.
+   Later, click Import from Gmail to check for new mail. Link unmatched messages
+   from the reading pane. In the offline demo the button imports examples only.
+
+The first refresh checks the configured lookback and sender restrictions.
+Later refreshes use a saved Gmail history ID and skip existing message IDs
+before downloading their content or attachments. Sent mail, drafts, spam and
+trash are excluded from new incoming imports. History expiry causes a safe
+lookback recheck; stored CRM messages are preserved.
+
+Import from Gmail shows connection/discovery status, then progress such as Importing...
+12/40, followed by Imported 7 new, 5 already existed, 0 failed. Downloads run in
+a worker so the app remains usable. Successful messages are saved individually;
+failed messages and any backlog stay queued for the next refresh. Errors suggest
+reconnecting Gmail, checking the connection or waiting for quota recovery.
+Sign-in is done explicitly through Gmail connection, not through Refresh.
+
+If importing appears to do nothing, check the result and the scope shown in
+Inbox. Zero new messages can mean no mail matches the selected sender/date
+limits, or matching mail is already stored. Change import options opens these
+settings directly. Manual imports clear search/quick filters and show all
+stored incoming mail even when no new messages were found. Scheduled imports
+preserve your current search and filters.
+
+Select All customers for the shared queue, or choose a customer to narrow it.
+Filter counts follow the search and selected scope. The visible unread total
+always covers all incoming mail. Needs assignment is a shared unlinked queue.
+
+To send reviewed replies:
+- Enable Allow creating Gmail drafts and reconnect for additional permissions.
+- Enable live sending after review and configure the permitted recipients.
+- Prepare a reply, edit if needed, then click Approve reply to save/approve it.
+- Click Send reply. The Gmail draft step is internal; no second content dialog.
+
+OAuth tokens are kept in the OS keyring. If a delivery result is uncertain,
+use Check Gmail status instead of trying another send. Outgoing replies currently
+support plain text and one recipient, without attachments, Cc or Bcc.
+Detailed instructions: docs/GMAIL_DESKTOP.md.
+
+7. AUTOMATION
+
+Add staff names and category assignments under Staff and assignment rules.
+These desktop names are routing labels, not authenticated staff accounts.
+
+For the recommended workflow use Setup -> Start 5-minute checks. This takes
+control of scheduling without rewriting advanced routing rules. Optional staff
+and category routing continues, while the independent AI prepares replies.
+The older Automation scheduler applies only before the new workflow is selected.
+For the legacy scheduler, enable inbox automation, choose an interval and save.
+Use Process
+imported mail now to handle mail already stored; use Inbox -> Import from Gmail to fetch
+new messages. Automation can classify messages, set priority, assign staff and
+prepare eligible replies for review using the selected FAQ provider.
+Scheduled checks reuse the same incremental import service and retry queue as
+manual importing, while preserving Inbox filters and messages still on that page.
+
+Categories use fixed keyword rules, so review their results. Automation never
+sends email or creates remote Gmail drafts. Scheduled checks run only while
+the desktop app is open. Pause automation stops new scheduled checks and triage.
+
+8. READ DOCUMENTS AND BUILD THE EXCEL REGISTER
+
+1) Select a customer and open Files -> Stored files.
+2) Choose a file, select its classification and click Store file.
+3) Open Excel register (all customers), choose the AI provider and workbook path.
+4) Click Read files and update Excel.
+5) Review selected extraction, correct mistakes and mark it reviewed when ready.
+6) Open Excel workbook to inspect the combined results.
+
+Supported inputs include PDF scans, images, DOCX, XLSX and text. The model can
+read invoices, receipts, contracts and other documents. Typical extracted data:
+- Supplier/buyer, invoice number, issue/due dates, currency, subtotal, tax, total.
+- Invoice line descriptions, quantities, prices and tax rates.
+- Contract parties, effective/expiry/renewal dates, notice periods and terms.
+- Other important facts, obligations, summaries and source quotations.
+
+One workbook covers registered files across all customers. It contains these
+sheets: Documents, Fields, Line items, Facts, Sections and Readme.
+The default output is exports/crm_documents.xlsx.
+
+Unchanged extractions are reused to avoid unnecessary model calls. Export saved
+results refreshes the workbook without new inference. Close Excel before updating
+the workbook. Missing, conflicting or uncertain data needs human review.
+
+Automatic document reading is optional and works after app events such as
+storing files or importing mail. It does not continuously watch arbitrary folders.
+For changes made outside the app, run Read files and update Excel manually.
+
+Local alternative: select Local - Ollama and run Start Document Model.cmd.
+It uses an existing local Ollama service or Docker Desktop and downloads the
+configured model if needed. Local reading requires more resources and can be slow.
+See docs/DOCUMENT_EXTRACTION.md.
+
+9. WHERE DATA IS KEPT
+
+- mini_crm.db: saved desktop customer, email, reply, settings and review records.
+- customer_files/: stored customer files and attachments.
+- exports/crm_documents.xlsx: default consolidated document workbook.
+- .env: private local environment settings, including an optional API key.
+- OS keyring: saved online AI keys and Gmail OAuth tokens.
+
+Back up the database, stored files and needed exports together while the app is
+closed. The workbook is an output, not a complete CRM backup. Keyring credentials
+are separate and may need to be set up again on another computer.
+
+10. SEPARATE MULTI-STAFF SERVER AND VECTOR SEARCH
+
+The server provides companies, contacts, conversations, internal notes, tasks,
+staff assignment, approved FAQs, draft review, audit metadata and read-only
+Gmail import jobs through a versioned API. Staff access uses an external OIDC
+identity provider, with admin, agent and viewer roles.
+
+Its semantic search uses PostgreSQL with pgvector and a separate local Ollama
+embedding worker over approved FAQs and customer emails. It needs its own
+database, server environment, migrations and worker configuration.
+
+The desktop Vercel setting does not configure that server vector worker. Desktop
+records are not automatically synchronized with server records. The server's
+Gmail integration does not send mail. Server operation and production deployment
+need additional setup; opening the desktop does not start these services.
+
+Server setup: backend/README.md.
+Vector search setup: docs/SEMANTIC_SEARCH.md.
+
+11. A QUICK PRESENTATION FOR A FRIEND
+
+1) Start Demo.cmd.
+2) Inbox -> select an opening-hours question -> Prepare reply.
+3) Review replies -> show the suggested response and edit it.
+4) Saved answers -> show the approved answer behind the suggestion.
+5) Select the refund example -> show that it needs human attention.
+6) Files -> Excel register -> process the fictional documents and inspect Excel.
+7) Review replies -> Approve reply. Send remains disabled in the offline demo.
+8) Automation -> process imported mail and inspect category/assignment history.
+
+For real online-model testing, use Open CRM.cmd with your Vercel key instead.
+You can test document extraction without connecting Gmail by storing a test file.
+
+12. CURRENT LIMITS AND VERIFICATION
+
+This is an evolving CRM, not a finished accounting system. AI-extracted amounts
+and dates need review. The desktop is a local workspace without server staff
+login enforcement. Shared server features require the separate backend setup.
+
+The latest full test run reports 419 passed and 16 skipped, with process exit
+code 0. The earlier exit error came from native Qt objects left alive after
+the tests; explicit test-session widget cleanup resolves the reproduced abort.
+Tests cover incremental Gmail, duplicate skipping, partial failures, backlog
+recovery, filters/search across 4,000 messages, and read/unread state.
+Additional mouse-click checks cover Gmail setup followed by automatic import,
+reply preparation, missing-answer guidance, visible model errors and retry.
+The test version has 15 workflow checks covering session approval, isolation,
+simulation, recipient scope, Stop, message limits and uncertain-send recovery.
+The new email workflow has 29 checks for five-minute scheduling, durable AI
+jobs, free-only HTTP requests, unavailable models, separate import/draft workers,
+preserved edits, exact approvals, one-click sending and uncertain-send locks.
+After switching to Nemotron, 61 focused workflow/online-AI checks pass with
+exit code 0, including migration from the previous model.
+Seven sent-history checks cover moving confirmed replies out of Inbox, active
+failed/uncertain attempts, search, pagination, send-button clicks and restart.
+Live Gmail, free-model availability and paid-model behavior still need testing
+with your own accounts. No real mail or paid inference was used in these checks.
+
+For the investigation findings and a step-by-step manual verification checklist,
+see docs/INBOX_REFRESH.md.
+
+Main references: docs/ONLINE_AI.md, docs/GMAIL_DESKTOP.md,
+docs/EMAIL_WORKFLOW.md, docs/INBOX_AUTOMATION.md, docs/DOCUMENT_EXTRACTION.md
+and backend/README.md.

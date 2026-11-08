@@ -39,6 +39,7 @@ _MALFORMED_PLACEHOLDER = re.compile(
 )
 _IBAN = re.compile(r"\b[A-Z]{2}\d{2}(?:[A-Z0-9]{2,4}){3,7}\b", re.I)
 _CARD = re.compile(r"(?<!\d)(?:\d[ -]?){13,19}(?!\d)")
+_EMAIL = re.compile(r"(?<![\w.+-])[\w.!#$%&'*+/=?^`{|}~-]+@[\w.-]+\.[A-Za-z]{2,63}\b", re.I)
 _DEFAULT_IDS = (
     re.compile(r"\bID-\d{6,12}\b", re.I),
     re.compile(r"\b[A-Z]{2}-\d{6,12}\b", re.I),
@@ -56,7 +57,7 @@ def _configured_patterns(patterns: Iterable[str | re.Pattern[str]] | None):
 
 
 def mask_text(text: str, id_patterns: Iterable[str | re.Pattern[str]] | None = None) -> MaskingResult:
-    """Replace cards, IBANs, and configured ID patterns with stable placeholders."""
+    """Replace emails, cards, IBANs and configured IDs with stable placeholders."""
     if not isinstance(text, str):
         return MaskingResult(PrivacyStatus.FAILED, "", reason="text is not valid")
     candidates: list[tuple[int, int, str]] = []
@@ -65,6 +66,8 @@ def mask_text(text: str, id_patterns: Iterable[str | re.Pattern[str]] | None = N
         # not permission to send a card-like value to a provider.
         candidates.append((match.start(), match.end(), match.group()))
     for match in _IBAN.finditer(text):
+        candidates.append((match.start(), match.end(), match.group()))
+    for match in _EMAIL.finditer(text):
         candidates.append((match.start(), match.end(), match.group()))
     for pattern in _configured_patterns(id_patterns):
         candidates.extend((match.start(), match.end(), match.group())
